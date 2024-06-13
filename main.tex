@@ -1,0 +1,149 @@
+\documentclass{article}
+\usepackage[a4paper, total={6in, 8in}]{geometry}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary {cd,arrows.meta}
+
+\usepackage{amsthm}
+\theoremstyle{plain}
+\newtheorem{mytheorem}{Theorem}[section]
+\newtheorem{mylemma}[mytheorem]{Lemma}
+\newtheorem{myproposition}[mytheorem]{Proposition}
+\newtheorem{mycorollary}[mytheorem]{Corollary}
+%\theorembodyfont{\rmfamily}
+\theoremstyle{definition}
+\newtheorem{mydefinition}[mytheorem]{Definition}
+\newtheorem{myassumption}[mytheorem]{Assumption}
+% %\theoremstyle{remark}
+\newtheorem{mynotation}[mytheorem]{Notation}
+\newtheorem{myremark}[mytheorem]{Remark}
+\newtheorem{myexample}[mytheorem]{Example}
+% \newenvironment{myproof}{\begin{proof}}{\end{proof}}
+% %\newtheorem*{myproof}{Proof}{\itshape}{\rmfamily}
+
+
+\title{Group 2 - Critical Pairs for String Diagram Rewriting}
+\author{Anna Matsui, Innocent Obi, Guillaume Sabbagh, Leo Torres,\\ Diana Kessler, Juan Meleiro, Koko Muroya}
+\date{June 2024}
+
+\begin{document}
+
+\maketitle
+
+\section{12 June 2024}
+\begin{algorithm}
+\caption{An algorithm for enumerating non-parallel critical pairs}\label{algo1}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{rewrite rules $\rho = \{ L_i \leftarrow K_i \rightarrow R_i \}_{i \in I}$}
+\Output{set of epimorphisms with interface ${(\epsilon : (L_i + L_j) \twoheadrightarrow X, F : J \to X)}_{i,j \in I}$}
+$R = \varnothing$\;
+\For{$(i,j) \in I \times I$}{
+    $\mathtt{compatible\_edges} = \{ e \in \mathtt{E}_{L_1 \times L_2} \mid p_1(\mathrm{label}(e)) = p_2(\mathrm{label}(e)) \}$\;
+    $\mathtt{gluings\_edges} = \{ s \mid s \in \mathcal{P}(\mathtt{compatible\_edges}), s \neq \varnothing\}$\;
+    \For{$\mathtt{gluing} \in \mathtt{gluings\_edges}$}{
+        $(\mathit{EG},L_1 + L_2 \overset{h}{\twoheadrightarrow} \mathit{EG}) = $ coequalizer $\Biggl($
+            \begin{tikzcd}
+                \mathtt{gluing} \arrow[d, "p_2", bend left] \arrow[d, "p_1"', bend right] \\
+                L_1 + L_2                                                                
+            \end{tikzcd}
+        $\Biggr)$\;
+        $\mathtt{compatible\_nodes} = \{ v \in \mathtt{V}_{\mathit{EG} \times \mathit{EG}} \mid p_1(v) \neq p_2(v) \}$\;
+%        $\mathtt{V}_{EG} = \{(x,y) \ |\ x \neq y \ \& \ x, y \in EG_{V} \}$\;
+%        $\mathtt{gluings\_nodes} = \mathcal{P}((\mathtt{V}_{EG})^2)$\;
+        $\mathtt{gluings\_nodes} = \mathcal{P}(\mathtt{compatible\_nodes})$\;
+        \For{$\mathtt{gluing2} \in \mathtt{gluings\_nodes}$}{
+            $(\mathit{NG},\mathit{EG} \overset{k}{\twoheadrightarrow} \mathit{NG}) = $ coequalizer $\Biggl($
+                \begin{tikzcd}
+                    \mathtt{gluing2} \arrow[d, "p_2^\prime", bend left] \arrow[d, "p_1^\prime"', bend right] \\
+                    \mathit{EG}
+                \end{tikzcd}
+            $\Biggr)$\;
+            \If{$NG$ satisfies the gluing condition and the ma-condition}{
+                $C_1 = $ the pushout complement of $\Bigl($% https://q.uiver.app/#q=WzAsNCxbMCwxLCJDXzEiXSxbMSwxLCJORyJdLFswLDAsIktfMSJdLFsxLDAsIkxfMSJdLFswLDEsInFeMV97Tkd9IiwyXSxbMiwzXSxbMywxLCJxXzE7aDtpIl0sWzIsMF0sWzEsMiwiIiwxLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lciJ9fV1d
+                \begin{tikzcd}[ampersand replacement=\&]
+	{K_1} \& {L_1} \\
+	{C_1} \& NG
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-1, to=2-1]
+	\arrow["{q_1;h;k}", from=1-2, to=2-2]
+	\arrow["{q^1_{NG}}"', from=2-1, to=2-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-2, to=1-1]
+\end{tikzcd}
+                $\Bigr)$\;
+                $C_2 = $ the pushout complement of $\Bigl($
+                \begin{tikzcd}[ampersand replacement=\&]
+	{K_2} \& {L_2} \\
+	{C_2} \& NG
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-1, to=2-1]
+	\arrow["{q_2;h;k}", from=1-2, to=2-2]
+	\arrow["{q^2_{NG}}"', from=2-1, to=2-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-2, to=1-1]
+\end{tikzcd}
+                $\Bigr)$\;
+                $J = $ the pullback of $\Biggl($ % https://q.uiver.app/#q=WzAsNCxbMCwwLCJKIl0sWzAsMSwiQ18xIl0sWzEsMSwiTkciXSxbMSwwLCJDXzIiXSxbMSwyLCJxX3tOR31eMSIsMl0sWzAsMiwiIiwxLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lci1pbnZlcnNlIn19XSxbMCwxLCJwXzEiLDJdLFswLDMsInBfMiJdLFszLDIsInFeMl97Tkd9Il1d
+                    \begin{tikzcd}[ampersand replacement=\&]
+                    	J \& {C_2} \\
+                    	{C_1} \& NG
+                    	\arrow["{p_2}", from=1-1, to=1-2]
+                    	\arrow["{p_1}"', from=1-1, to=2-1]
+                    	\arrow["\ulcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
+                    	\arrow["{q^2_{NG}}", from=1-2, to=2-2]
+                    	\arrow["{q_{NG}^1}"', from=2-1, to=2-2]
+                    \end{tikzcd} $\Biggr)$  \;
+                $R = R \cup \{(h;k,\ p_1;q^1_\mathrm{NG})\}$\;
+            }{
+            }
+        }
+    }
+}
+\Return R\;
+\end{algorithm}
+
+Let's give an example, consider the following rewrite system~:
+
+
+\begin{myproposition}
+    Let $R$ be the output of Algo.~\ref{algo1}.
+    \begin{enumerate}
+        \item (Correctness) For each $(\epsilon,F) \in R$, $\epsilon$ is an epimorphism.
+        \item (Exhaustiveness) For any non-parallel pre-critical pair $L_1 + L_2 \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$, we have $(\epsilon,F) \in R$.
+        \item (Effectiveness) $R$ contains only non-parallel pre-critical pairs.
+    \end{enumerate}
+\end{myproposition}
+
+\begin{enumerate}
+    \item
+    \item 
+\end{enumerate}
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHEQBfU9TXfIRRkAjFVqMWbADIB9YCK4ACANRK5wAExduvEBmx4CRMpvH1mrRCACinHn0OCTpAMznJVkAA1u4mFAA5vBEoABmAE4QALZIZCA4EEgi1ABGMGBQSAC0rsQOIJExcdSJyWkZWYh5BUWxiCkJSYia1AxYYF5QEDg4ASDUABYwdFUJAO4Qw6MIbXTpDAAK-EZCIBFYgYM4AxKWbACOuuFR9a1NSK4VmTl5cwvLTsbWG1s71BZS1gAex4WnSHOZWq1yqdxADHmMCWK2c1gYMDC7z2XxAAE8-FwgA
+\begin{tikzcd}
+G \arrow[d, bend right] \arrow[d, bend left]             \\
+L_{1} + L_{2} \arrow[d, "q"', two heads, dotted]         \\
+EG \arrow[d, "x"', bend right] \arrow[d, "y", bend left] \\
+X                                                       
+\end{tikzcd}
+
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHEQBfU9TXfIRRkAjFVqMWbADIB9YCK4ACANRK5wAExduvEBmx4CRMpvH1mrRCACinHn0OCiI0meoWp1gBrdxMKABzeCJQADMAJwgAWyQyEBwIJFcQACMYMCgkAFoAZnjPKxAwkGoGOnSGAAV+IyEQCKxAgAscXXCo2MR4xOTqdMykfI9JIsD24s6+hKTETTKsMCKoCBwcANKQZpg6LOscAHcIbd2EMoqYatrna0aWtpHLNgBHCciYpHmZocevEAAPAC8AE9NuVKjUnMZbk1Wm8pogUr1ELlfkVnv94R9utRkaiJE9rGEMUpAUpAhi-FwgA
+\begin{tikzcd}
+G \arrow[d, "f"', bend right] \arrow[d, "g", bend left] \arrow[rdd, "fqx = gqx"] &   \\
+L_{1} + L_{2} \arrow[d, "q"', two heads, dotted] \arrow[rd, "qx"]                &   \\
+EG \arrow[r, "x=y"']                                                             & X
+\end{tikzcd}
+
+\section{13 June 2024}
+
+\begin{algorithm}
+    \caption{An algorithm for enumerating non-parallel critical pairs}\label{algo2}
+    \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}\SetKw{Yield}{yield}
+    \Input{rewrite rules $\rho = \{ L_i \overset{f_i}{\leftarrow} K_i \overset{g_i}{\rightarrow} R_i \}_{i \in I}$}
+    \Output{epimorphisms with interface $
+    \{ \{ L_i + L_j \overset{\epsilon}{\twoheadrightarrow} S_{ij\gamma} \leftarrow J_{ij\gamma} \}_{\gamma \in I_{ij}} \}_{(i,j) \in I^2}$}
+    \Yield{foo}\;
+    
+\end{algorithm}
+
+\end{document}
