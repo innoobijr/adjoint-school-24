@@ -1,28 +1,116 @@
 \documentclass{article}
-\usepackage[a4paper, total={6in, 8in}]{geometry}
+\usepackage[a4paper]{geometry}
 \usepackage{graphicx} % Required for inserting images
 \usepackage[ruled,linesnumbered]{algorithm2e}
 \usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{tikz}
-\usetikzlibrary {cd,arrows.meta}
+\usepackage{microtype}
+
+\usepackage{enumitem}
+\setlist[description]{leftmargin=2em,labelindent=2em}
+
+\usepackage{polyglossia}
+\setmainlanguage{english}
+
+\usepackage{fontspec}
+\setmainfont{EB Garamond}
 
 \usepackage{amsthm}
-\theoremstyle{plain}
-\newtheorem{mytheorem}{Theorem}[section]
-\newtheorem{mylemma}[mytheorem]{Lemma}
-\newtheorem{myproposition}[mytheorem]{Proposition}
-\newtheorem{mycorollary}[mytheorem]{Corollary}
-%\theorembodyfont{\rmfamily}
-\theoremstyle{definition}
-\newtheorem{mydefinition}[mytheorem]{Definition}
-\newtheorem{myassumption}[mytheorem]{Assumption}
-% %\theoremstyle{remark}
-\newtheorem{mynotation}[mytheorem]{Notation}
-\newtheorem{myremark}[mytheorem]{Remark}
-\newtheorem{myexample}[mytheorem]{Example}
-% \newenvironment{myproof}{\begin{proof}}{\end{proof}}
-% %\newtheorem*{myproof}{Proof}{\itshape}{\rmfamily}
+	\theoremstyle{definition}
+	\newtheorem{mytheorem}{Theorem}[section]
+	\newtheorem{mylemma}[mytheorem]{Lemma}
+	\newtheorem{myproposition}[mytheorem]{Proposition}
+	\newtheorem{mycorollary}[mytheorem]{Corollary}
+	\newtheorem{myconjecture}[mytheorem]{Conjecture}
+	\newtheorem{mydefinition}[mytheorem]{Definition}
+	\newtheorem{myassumption}[mytheorem]{Assumption}
+	\newtheorem{mynotation}[mytheorem]{Notation}
+	\newtheorem{myremark}[mytheorem]{Remark}
+	\newtheorem{myexample}[mytheorem]{Example}
+	\newenvironment{myproof}{\begin{proof}}{\end{proof}}
+
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\newcommand{\dkcom}[2][1=]{\todo[linecolor=purple,backgroundcolor=purple!25,bordercolor=purple,#1]{#2}}
+\newcommand{\dknote}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+
+\newcommand{\compl}{\mathrel{\backslash}}
+\newcommand \ie {\textit{i.e.}}
+\newcommand \id {\mathrm{id}}
+\newcommand \tuple [1] {\left\langle #1 \right\rangle}
+\newcommand{\funct}[5] {
+	\begin{equation}
+		\begin{aligned}
+			#1:#2 & \longrightarrow #3 \\
+			#4 & \longmapsto #5 
+		\end{aligned}
+	\end{equation}
+}
+
+\newcommand \Hyp {\mathrm{Hyp}}
+
+\NewDocumentCommand \catspan   {mmmO{}O{}} {{#1 \xlongleftarrow{#4} #2 \xlongrightarrow{#5} #3}}
+\NewDocumentCommand \catcospan {mmmO{}O{}} {{#1 \xlongrightarrow{#4} #2 \xlongleftarrow{#5} #3}}
+
+\makeatletter
+\providecommand{\leftsquigarrow}{%
+  \mathrel{\mathpalette\reflect@squig\relax}%
+}
+\newcommand{\reflect@squig}[2]{%
+  \reflectbox{$\m@th#1\rightsquigarrow$}%
+}
+
+%% tikz
+\usepackage{quiver}
+\usepackage{tikz}
+\usetikzlibrary {cd,arrows.meta}
+\usepackage{tikz-cd}
+\usepackage{adjustbox}
+\usetikzlibrary{positioning}
+\usetikzlibrary{graphs}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{arrows.meta}
+\newcommand \separator {\bigskip\hrule\bigskip}
+\newcommand \hide [1] {\bgroup}
+\tikzset{
+	mgvertex/.style={
+		circle,
+		fill,
+		inner sep=0pt,
+		minimum size=5pt,
+		label=#1:{\tikzgraphnodetext},
+		execute at begin node=\hide,
+		graphs/as={}
+	},
+	mgvertex/.default={above},
+	mg/.style={
+		graphs/every graph/.style = {grow right sep = 15mm},
+		every edge quotes/.style = {draw,fill=white,sloped,midway,->},
+		baseline = (current bounding box.center)
+	},
+	k1/.pic = {
+		\graph {
+			0 [mgvertex=left] -!- 1 [mgvertex=right] ;
+			2 [mgvertex=left] -!- 3 [mgvertex=right] ;
+		} ;
+	},
+	l1/.pic = {
+		\graph {
+			0 [mgvertex=left] -> ["a"] 1 [mgvertex=right] ;
+			2 [mgvertex=left] -> ["b"] 3 [mgvertex=right] ;
+		} ;
+	},
+	l2/.pic = {
+		\graph {
+			4 [mgvertex=left] -> ["a"] 5 [mgvertex=right];
+		} ;
+	},
+	k2/.pic = {
+		\graph {
+			4 [mgvertex=left]-!- 5 [mgvertex=right];
+		} ;
+	}
+}
 
 
 \title{Group 2 - Critical Pairs for String Diagram Rewriting}
@@ -33,117 +121,706 @@
 
 \maketitle
 
-\section{12 June 2024}
-\begin{algorithm}
-\caption{An algorithm for enumerating non-parallel critical pairs}\label{algo1}
-\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
-\Input{rewrite rules $\rho = \{ L_i \leftarrow K_i \rightarrow R_i \}_{i \in I}$}
-\Output{set of epimorphisms with interface ${(\epsilon : (L_i + L_j) \twoheadrightarrow X, F : J \to X)}_{i,j \in I}$}
-$R = \varnothing$\;
-\For{$(i,j) \in I \times I$}{
-    $\mathtt{compatible\_edges} = \{ e \in \mathtt{E}_{L_1 \times L_2} \mid p_1(\mathrm{label}(e)) = p_2(\mathrm{label}(e)) \}$\;
-    $\mathtt{gluings\_edges} = \{ s \mid s \in \mathcal{P}(\mathtt{compatible\_edges}), s \neq \varnothing\}$\;
-    \For{$\mathtt{gluing} \in \mathtt{gluings\_edges}$}{
-        $(\mathit{EG},L_1 + L_2 \overset{h}{\twoheadrightarrow} \mathit{EG}) = $ coequalizer $\Biggl($
-            \begin{tikzcd}
-                \mathtt{gluing} \arrow[d, "p_2", bend left] \arrow[d, "p_1"', bend right] \\
-                L_1 + L_2                                                                
-            \end{tikzcd}
-        $\Biggr)$\;
-        $\mathtt{compatible\_nodes} = \{ v \in \mathtt{V}_{\mathit{EG} \times \mathit{EG}} \mid p_1(v) \neq p_2(v) \}$\;
-%        $\mathtt{V}_{EG} = \{(x,y) \ |\ x \neq y \ \& \ x, y \in EG_{V} \}$\;
-%        $\mathtt{gluings\_nodes} = \mathcal{P}((\mathtt{V}_{EG})^2)$\;
-        $\mathtt{gluings\_nodes} = \mathcal{P}(\mathtt{compatible\_nodes})$\;
-        \For{$\mathtt{gluing2} \in \mathtt{gluings\_nodes}$}{
-            $(\mathit{NG},\mathit{EG} \overset{k}{\twoheadrightarrow} \mathit{NG}) = $ coequalizer $\Biggl($
-                \begin{tikzcd}
-                    \mathtt{gluing2} \arrow[d, "p_2^\prime", bend left] \arrow[d, "p_1^\prime"', bend right] \\
-                    \mathit{EG}
-                \end{tikzcd}
-            $\Biggr)$\;
-            \If{$NG$ satisfies the gluing condition and the ma-condition}{
-                $C_1 = $ the pushout complement of $\Bigl($% https://q.uiver.app/#q=WzAsNCxbMCwxLCJDXzEiXSxbMSwxLCJORyJdLFswLDAsIktfMSJdLFsxLDAsIkxfMSJdLFswLDEsInFeMV97Tkd9IiwyXSxbMiwzXSxbMywxLCJxXzE7aDtpIl0sWzIsMF0sWzEsMiwiIiwxLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lciJ9fV1d
-                \begin{tikzcd}[ampersand replacement=\&]
-	{K_1} \& {L_1} \\
-	{C_1} \& NG
-	\arrow[from=1-1, to=1-2]
-	\arrow[from=1-1, to=2-1]
-	\arrow["{q_1;h;k}", from=1-2, to=2-2]
-	\arrow["{q^1_{NG}}"', from=2-1, to=2-2]
-	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-2, to=1-1]
-\end{tikzcd}
-                $\Bigr)$\;
-                $C_2 = $ the pushout complement of $\Bigl($
-                \begin{tikzcd}[ampersand replacement=\&]
-	{K_2} \& {L_2} \\
-	{C_2} \& NG
-	\arrow[from=1-1, to=1-2]
-	\arrow[from=1-1, to=2-1]
-	\arrow["{q_2;h;k}", from=1-2, to=2-2]
-	\arrow["{q^2_{NG}}"', from=2-1, to=2-2]
-	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-2, to=1-1]
-\end{tikzcd}
-                $\Bigr)$\;
-                $J = $ the pullback of $\Biggl($ % https://q.uiver.app/#q=WzAsNCxbMCwwLCJKIl0sWzAsMSwiQ18xIl0sWzEsMSwiTkciXSxbMSwwLCJDXzIiXSxbMSwyLCJxX3tOR31eMSIsMl0sWzAsMiwiIiwxLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lci1pbnZlcnNlIn19XSxbMCwxLCJwXzEiLDJdLFswLDMsInBfMiJdLFszLDIsInFeMl97Tkd9Il1d
-                    \begin{tikzcd}[ampersand replacement=\&]
-                    	J \& {C_2} \\
-                    	{C_1} \& NG
-                    	\arrow["{p_2}", from=1-1, to=1-2]
-                    	\arrow["{p_1}"', from=1-1, to=2-1]
-                    	\arrow["\ulcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
-                    	\arrow["{q^2_{NG}}", from=1-2, to=2-2]
-                    	\arrow["{q_{NG}^1}"', from=2-1, to=2-2]
-                    \end{tikzcd} $\Biggr)$  \;
-                $R = R \cup \{(h;k,\ p_1;q^1_\mathrm{NG})\}$\;
-            }{
-            }
-        }
-    }
-}
-\Return R\;
-\end{algorithm}
+\section{Notation} 
+\textbf{Composition}. We use postfix notation for composition, separated by the symbol "$;$", so if $f$ and $g$ are morphisms in a category, then $f;g$ denotes the morphism obtained by first applying $f$ and then $g$. \\
 
-Let's give an example, consider the following rewrite system~:
+\textbf{Coequalizer}. When we need to compute a coequalizer, we will write $(Q,q) = \mathtt{coeq}_A(f,g)$ to denote that $(Q, q: B \to Q)$ if the following diagram is a coequalizer:
 
+% https://q.uiver.app/#q=WzAsNCxbMSwwLCJCIl0sWzAsMCwiQSJdLFsxLDFdLFsyLDAsIkMiXSxbMSwwLCJmIiwwLHsib2Zmc2V0IjotMn1dLFsxLDAsImciLDIseyJvZmZzZXQiOjJ9XSxbMCwzLCJxIl1d
+\[\begin{tikzcd}
+	A & B & C \\
+	& {}
+	\arrow["f", shift left=2, from=1-1, to=1-2]
+	\arrow["g"', shift right=2, from=1-1, to=1-2]
+	\arrow["q", from=1-2, to=1-3]
+\end{tikzcd}\]
+
+\textbf{Pullbacks}. Throught this paper, we will use the product-style notation for pullbacks. Given the following diagram in a category $\mathcal{C}:$ 
+
+% https://q.uiver.app/#q=WzAsMyxbMSwxLCJDIl0sWzEsMCwiQiJdLFswLDEsIkEiXSxbMSwwLCJnIl0sWzIsMCwiZiIsMl1d
+\[\begin{tikzcd}
+	& B \\
+	A & C
+	\arrow["g", from=1-2, to=2-2]
+	\arrow["f"', from=2-1, to=2-2]
+\end{tikzcd}\]
+ 
+we denote the limit of the above diagram by $A \times_C B$.
+
+We also write $(C,f,g) = p_1\compl p_2$ to denote the pullback complement, i.e the triple $(C,f,g)$ that makes $P$ in the following diagram be a pullback.
+
+% https://q.uiver.app/#q=WzAsNCxbMSwxLCJDIl0sWzEsMCwiQiJdLFswLDEsIkEiXSxbMCwwLCJQIl0sWzEsMCwiZyJdLFsyLDAsImYiLDJdLFszLDEsInBfMiJdLFszLDIsInBfMSIsMl1d
+\[\begin{tikzcd}
+	P & B \\
+	A & C
+	\arrow["{p_2}", from=1-1, to=1-2]
+	\arrow["{p_1}"', from=1-1, to=2-1]
+	\arrow["g", from=1-2, to=2-2]
+	\arrow["f"', from=2-1, to=2-2]
+\end{tikzcd}\]
+
+
+If we need not mention the third coordinate, we may discard it and simply write $(P,f) = p_1 \compl p_2$.
+
+% \section{12 June 2024}
+
+% \begin{mydefinition}
+%     Let $\Sigma$ be a signature, \ie a set of function symbols, and $X$ a set of variables disjoint from $\Sigma$. 
+
+%     A hypergraph $G$ is a tuple $(V_G, E_G, s_G, t_G)$ where $V_G$ and $E_G$ are finite sets of nodes (vertices) and hyperedges, $s_G: E_G \rightarrow V_G$ and $t_G: E_G \rightarrow V_G^{*}$ are mappings that assign a source node and a string of target nodes to each edge.
+% \end{mydefinition}
+
+% \begin{mydefinition}
+%     Let $\Sigma$ be a signature, \ie, a set of function symbols. A (directed) hypergraph $G$ is a tuple $(V_G, E_G, s_G, t_G, l_E)$ where $V_G$ and $E_G$ are finite sets of nodes (vertices) and hyperedges, $s_G: E_G \rightarrow V_G$ and $t_G: E_G \rightarrow V_G^{*}$ are mappings that assign a source node and a string of target nodes to each edge and $l_E : E_G \to \Sigma$ is an edge labelling function. \\
+
+%     We let $\Hyp_{\Sigma}$ be the category of hypergraphs with fixed labels and hypergraph homomorphisms.
+% \end{mydefinition}
+
+\begin{mydefinition}%[Alternative definition]
+    Let $\Sigma$ be a signature, \ie, a set of function symbols. A (directed) hypergraph $G$ is a tuple $(V_G, E_G, s_G, t_G, l_E)$ where $V_G$ and $E_G$ are finite sets of nodes (vertices) and hyperedges, $s_G, t_G: E_G \rightarrow V_G^{*}$ are mappings that assign a string of source and target nodes to each edge and $l_E : E_G \to \Sigma$ is an edge labelling function. \\
+
+    We let $\Hyp_{\Sigma}$ be the category of hypergraphs with fixed labels and hypergraph homomorphisms.
+\end{mydefinition}
+
+\begin{mydefinition}
+    A hypergraph with interface is a cospan $\catcospan n G m$ in $\Hyp_{\Sigma}$ where $n$, $m$ are discrete hypergraphs. \dkcom[]{Are f and g monos? In alvarez they're defined as being monos, while in bonchi it is not mentioned. - YES, they are!} \dkcom[]{in bonchi, it is a map J -> G in Hyp, "not necessarily mono even if it is in the majority of the examples}
+\end{mydefinition}
+
+To define ma-hypergraphs, we need some new terminology:
+
+\begin{mydefinition}
+    The in-degree of a node $v$ in a hypergraph $G$ is the number of pairs $(h, i)$, where $h$ is an hyperedge with $v$ as its $i$-th target.
+
+    Similarly, out-degree of is the number of pairs $(h, j)$ where $h$ is an hyperedge with $v$ as its $j$-th source.
+\end{mydefinition}
+
+\dkcom[]{the hypergraph definition should have a list of sources then}
+\dkcom[]{bonchi and alvarez allow for multiple inputs, while plump had only multiple outputs.}
+
+\begin{mydefinition}
+    A hypergraph $G$ is monogamous acyclic (or an \emph{ma-hypergraph}) if 
+    \begin{enumerate}
+        \item it contains no cycle, and
+        \item every node has at most in- and out- degree 1.
+    \end{enumerate}
+\end{mydefinition}
+
+In this work we take the approach of \emph{double pushout rewriting} (DPO rewriting) in $\Hyp_{\Sigma}$. A DPO rule is a span $\catspan L K R$ in $\Hyp_{\Sigma}$. A DPO system $\mathcal{R}$ is a finite set of DPO rules. We say that a hypergraph $G$ rewrites into a hypergraph $H$ if there exist a rule $L \xleftarrow{} K \to R$ and an object $C \in \Hyp_{\Sigma}$ such that the following two squares are pushouts: 
+
+% https://q.uiver.app/#q=WzAsNixbMCwxLCJHIl0sWzQsMCwiUiJdLFs0LDEsIkgiXSxbMiwxLCJDIl0sWzIsMCwiSyJdLFswLDAsIkwiXSxbMSwyXSxbMywwXSxbMywyXSxbNCwzXSxbNCwxLCJnIl0sWzQsNSwiZiIsMl0sWzUsMCwibSIsMl0sWzAsMTEsIiIsMix7ImxldmVsIjoxLCJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbMiwxMCwiIiwyLHsibGV2ZWwiOjEsInN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dXQ==
+\[\begin{tikzcd}
+	L && K && R \\
+	G && C && H
+	\arrow["m"', from=1-1, to=2-1]
+	\arrow[""{name=0, anchor=center, inner sep=0}, "f"', from=1-3, to=1-1]
+	\arrow[""{name=1, anchor=center, inner sep=0}, "g", from=1-3, to=1-5]
+	\arrow[from=1-3, to=2-3]
+	\arrow[from=1-5, to=2-5]
+	\arrow[from=2-3, to=2-1]
+	\arrow[from=2-3, to=2-5]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=0]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-5, to=1]
+\end{tikzcd}\]
+
+The above works as follows: given a \dkcom[]{This paragraph sounds pretty similar to what is in Bonchi et al., parts 1 and 2. Should we rephrase or cite somehow?} rewrite rule $\catspan L K R$, a hypergraph $G$ and morphism $L \xrightarrow{m} G$, we first compute the pushout complement $C$ which is the part that ``removes'' the matching of $L$ in $G$ while keeping the image of $K$. We then compute the pushout of $\catspan C K R [][g]$ which glues $R$ and $C$ along $K$. 
+
+In what follows, we work with systems in which each rule is \emph{left-linear}. A DPO rule is said to be left-linear if $K \xlongrightarrow{f} L$ is mono. By \cite[Proposition 3.18]{bonchi_rewriting1} if a rewrite rule $K \xlongrightarrow{f}L \xlongrightarrow{m} G$ is left-linear, then the pushout complement is unique, if it exists. 
+
+\vspace{0.5cm}
+
+The pushout complement of a hypergraph exists if and only if the gluing condition is verified.
+
+We remind the definition of the gluing condition, it can be found in \cite[pp.44,45]{ehrig_fundamentals_2006}.
+\begin{mydefinition}
+    Let $RR = \catspan L K R [f] [g]$ be a rewrite rule and $m : L \to X$ be a matching of the left-hand side of the rule.
+
+    \begin{itemize}
+	\item The gluing points $GP$ are the nodes and hyperedges in $L$ that are not deleted by the rewrite rule, namely the nodes and hyperedges in the image of $f$, \ie, $GP = l_V (V_K ) \cup l_E (E_K )$;
+	
+	\item the identification points $IP$ are the nodes and hyperedges in $L$ that are identified by $m$, namely the nodes and hyperedges with at least two different preimages by $m$, \ie,
+	\begin{align*}
+		IP &= \{v \in V_L \mid \exists w \in V_L(w) \mathrel. w\neq v \land m_V(v) = m_V(w)\} \\
+		&\mathrel{\cup} \{e \in E_L \mid \exists f \in E_L \mathrel. f \neq e \land m_E(e) = m_E(f )\}
+	\end{align*}
+	
+	\item the dangling points $DP$ are the nodes in $L$ whose images under $m$ are the source or target of and edge in $X$ with no preimage by $m$, \ie,
+	\[
+		DP = \{v \in VL \mid \exists e \in  E_G\compl m_E (E_L) , s_G(e) = m_V (v) \vee t_G(e) = m_V (v)\}
+	\]
+	\end{itemize}
+
+	$RR$ and $m$ satisfy the gluing condition if $IP \cup DP \subseteq GP$.
+    
+\end{mydefinition}
+
+For example, let's consider the following rewrite rule with a matching (we labelled the nodes to mention them more easily):
+
+\[
+\begin{tikzcd}
+		L & K & R \\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left, fill=orange, draw=orange] -> ["a"] 2 [mgvertex=right];
+                3 [mgvertex = left, fill=orange, draw=orange] -> ["a"] 4 [mgvertex = right];
+                5[mgvertex=left, fill=blue, draw=blue] -!- 6 [mgvertex = right, fill=blue, draw=blue];
+            };
+		\end{tikzpicture} & \begin{tikzpicture}[mg,framed]
+                \graph {
+                    1 [mgvertex=left] -!- 2 [mgvertex=right];
+                3 [mgvertex = left] -!- ["a"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+                };
+        \end{tikzpicture} &
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left] -> ["b"] 2 [mgvertex=right];
+                3 [mgvertex = left] -> ["c"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+			} ;
+		\end{tikzpicture}
+        \arrow[from=2-2,to=2-1]
+		\arrow[from=2-2,to=2-3]
+        \arrow[from=2-1, to=3-1]\\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+                1 [mgvertex=left] -> ["a"] 2 [mgvertex=right];
+                3 [opacity = 0] -!- 4 [mgvertex = right];
+                1  -> ["a" {pos=0.5, yshift=-0.15cm}] 4;
+                5 [mgvertex=left] -> ["x"] 6 [mgvertex=right];
+            };
+		\end{tikzpicture}&&
+	\end{tikzcd}
+\]
+
+The identification points, in orange, are $\{1,3\}$. The dangling points, in blue, are $\{5,6\}$. The gluing points are all the nodes $\{1,2,3,4,5,6\}$. The gluing condition is verified because $IP \cup DP \subseteq GP$ (all orange and blue points have a preimage by $f$).
+
+We can therefore compute the pushout complement:
+
+\[
+\begin{tikzcd}
+		L & K & R \\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left, fill=orange, draw=orange] -> ["a"] 2 [mgvertex=right];
+                3 [mgvertex = left, fill=orange, draw=orange] -> ["a"] 4 [mgvertex = right];
+                5[mgvertex=left, fill=blue, draw=blue] -!- 6 [mgvertex = right, fill=blue, draw=blue];
+            };
+		\end{tikzpicture} & \begin{tikzpicture}[mg,framed]
+                \graph {
+                    1 [mgvertex=left] -!- 2 [mgvertex=right];
+                3 [mgvertex = left] -!- ["a"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+                };
+        \end{tikzpicture} &
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left] -> ["b"] 2 [mgvertex=right];
+                3 [mgvertex = left] -> ["c"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+			} ;
+		\end{tikzpicture}
+                \arrow[from=2-2,to=2-1]
+		\arrow[from=2-2,to=2-3]
+        \arrow[from=2-1, to=3-1]
+        \arrow[from=2-2, to=3-2]
+        \arrow[from=3-2, to=3-1]
+            \\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+                1 [mgvertex=left] -> ["a"] 2 [mgvertex=right];
+                3 [opacity = 0] -!- 4 [mgvertex = right];
+                1  -> ["a" {pos=0.5, yshift=-0.15cm}] 4;
+                5 [mgvertex=left] -> ["x"] 6 [mgvertex=right];
+            };
+		\end{tikzpicture}&
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+                1 [mgvertex=left] -!- 2 [mgvertex=right];
+                3 [opacity = 0] -!- 4 [mgvertex = right];
+                5 [mgvertex=left] -> ["x"] 6 [mgvertex=right];
+            };
+		\end{tikzpicture}&
+	\end{tikzcd}
+\]
+
+We can see why, if $IP \not \subseteq GP$, the pushout complement would not exist:
+
+\[
+\begin{tikzcd}
+		L & K & R \\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left, fill=orange, draw=orange] -> ["a", draw=orange] 2 [mgvertex=right, fill=orange, draw=orange];
+                3 [mgvertex = left, fill=orange, draw=orange] -> ["a", draw=orange] 4 [mgvertex = right, fill=orange, draw=orange];
+                5[mgvertex=left, fill=blue, draw=blue] -!- 6 [mgvertex = right, fill=blue, draw=blue];
+            };
+		\end{tikzpicture} & \begin{tikzpicture}[mg,framed]
+                \graph {
+                    1 [mgvertex=left] -!- 2 [mgvertex=right];
+                3 [mgvertex = left] -!- ["a"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+                };
+        \end{tikzpicture} &
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left] -> ["b"] 2 [mgvertex=right];
+                3 [mgvertex = left] -> ["c"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+			} ;
+		\end{tikzpicture}
+        \arrow[from=2-2,to=2-1]
+		\arrow[from=2-2,to=2-3]
+        \arrow[from=2-1, to=3-1]
+        \arrow[from=2-2, to=3-2]
+        \arrow[from=3-2, to=3-1]\\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+                1 [mgvertex=left] -> ["a"] 2 [mgvertex=right];
+                5 [mgvertex=left] -> ["x"] 6 [mgvertex=right];
+            };
+		\end{tikzpicture}&\times&
+	\end{tikzcd}
+\]
+
+No hypergraph  can make the left square a pushout: we cannot remove two $a$ hyperedges in the matching because there is only one $a$ hyperedge in the matching. The ``best'' we can do is the following construction (note that the pushout is not the one we wanted):
+
+\[
+\begin{tikzcd}
+		L & K & R \\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left, fill=orange, draw=orange] -> ["a", draw=orange] 2 [mgvertex=right, fill=orange, draw=orange];
+                3 [mgvertex = left, fill=orange, draw=orange] -> ["a", draw=orange] 4 [mgvertex = right, fill=orange, draw=orange];
+                5[mgvertex=left, fill=blue, draw=blue] -!- 6 [mgvertex = right, fill=blue, draw=blue];
+            };
+		\end{tikzpicture} & \begin{tikzpicture}[mg,framed]
+                \graph {
+                    1 [mgvertex=left] -!- 2 [mgvertex=right];
+                3 [mgvertex = left] -!- ["a"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+                };
+        \end{tikzpicture} &
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left] -> ["b"] 2 [mgvertex=right];
+                3 [mgvertex = left] -> ["c"] 4 [mgvertex = right];
+                5[mgvertex=left] -!- 6 [mgvertex = right];
+			} ;
+		\end{tikzpicture}
+        \arrow[from=2-2,to=2-1]
+		\arrow[from=2-2,to=2-3]
+        \arrow[from=2-1, to=3-1]
+        \arrow[from=2-2, to=3-2]
+        \arrow[from=3-2, to=3-1]\\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+                1 [mgvertex=left] -> ["a", bend left] 2 [mgvertex=right];
+                1 -> ["a", bend right] 2;
+                5 [mgvertex=left] -> ["x"] 6 [mgvertex=right];
+            };
+		\end{tikzpicture}&
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+                1 [mgvertex=left] -!- 2 [mgvertex=right];
+                5 [mgvertex=left] -> ["x"] 6 [mgvertex=right];
+            };
+		\end{tikzpicture}&
+	\end{tikzcd}
+\]
+
+
+
+We can also see why if $DP \not \subseteq GP$, the pushout complement would not exist~:
+
+\[
+\begin{tikzcd}
+		L & K & R \\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left, fill=orange, draw=orange] -> ["a"] 2 [mgvertex=right];
+                3 [mgvertex = left, fill=orange, draw=orange] -> ["a"] 4 [mgvertex = right];
+                5[mgvertex=left, fill=blue, draw=blue] -!- 6 [mgvertex = right, fill=blue, draw=blue];
+            };
+		\end{tikzpicture} & \begin{tikzpicture}[mg,framed]
+                \graph {
+                    1 [mgvertex=left] -!- 2 [mgvertex=right];
+                3 [mgvertex = left] -!- ["a"] 4 [mgvertex = right];
+                };
+        \end{tikzpicture} &
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+				1 [mgvertex=left] -> ["b"] 2 [mgvertex=right];
+                3 [mgvertex = left] -> ["c"] 4 [mgvertex = right];
+			} ;
+		\end{tikzpicture}
+                \arrow[from=2-2,to=2-1]
+		\arrow[from=2-2,to=2-3]
+        \arrow[from=2-1, to=3-1]
+        \arrow[from=2-2, to=3-2]
+        \arrow[from=3-2, to=3-1]
+            \\
+        \begin{tikzpicture}[mg,framed]
+			\graph {
+                1 [mgvertex=left] -> ["a"] 2 [mgvertex=right];
+                3 [opacity = 0] -!- 4 [mgvertex = right];
+                1  -> ["a" {pos=0.5, yshift=-0.15cm}] 4;
+                5 [mgvertex=left] -> ["x"] 6 [mgvertex=right];
+            };
+		\end{tikzpicture}&
+        \times&
+	\end{tikzcd}
+\]
+
+We cannot remove the nodes $5$ and $6$ from the matching without removing the hyperedge $x$, the hyperedge $x$ would be left with a source and a target missing.
+
+
+
+\begin{mydefinition}[Pre-critical pair] \label{dfn:pcPair}
+    Let $\mathcal{R}$ be a DPO system with rules $\catspan {L_1} {K_1} {R_1}$ and $\catspan {L_2} {K_2} {R_2}$. Consider two derivations with common source $S$:
+
+    % https://q.uiver.app/#q=WzAsMTEsWzAsMCwiUl8xIl0sWzEsMCwiS18xIl0sWzIsMCwiTF8xIl0sWzQsMCwiTF8yIl0sWzUsMCwiS18yIl0sWzMsMSwiUyJdLFswLDEsIkhfMSJdLFsxLDEsIkNfMSJdLFs1LDEsIkNfMiJdLFs2LDEsIkhfMiJdLFs2LDAsIlJfMiJdLFsxLDJdLFsxLDBdLFs0LDNdLFs0LDEwXSxbMyw1LCJmXzIiLDJdLFsyLDUsImZfMSJdLFs3LDZdLFswLDZdLFsxLDddLFs4LDVdLFs4LDldLFsxMCw5XSxbNCw4XSxbNiwxLCIiLDEseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbNSwxLCIiLDEseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbNSw0LCIiLDEseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbNyw1LCIiLDIseyJsYWJlbF9wb3NpdGlvbiI6NDB9XSxbOSw0LCIiLDIseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XV0=
+\[\begin{tikzcd}
+	{R_1} & {K_1} & {L_1} && {L_2} & {K_2} & {R_2} \\
+	{H_1} & {C_1} && S && {C_2} & {H_2}
+	\arrow[from=1-1, to=2-1]
+	\arrow[from=1-2, to=1-1]
+	\arrow[from=1-2, to=1-3]
+	\arrow[from=1-2, to=2-2]
+	\arrow["{m_1}", from=1-3, to=2-4]
+	\arrow["{m_2}"', from=1-5, to=2-4]
+	\arrow[from=1-6, to=1-5]
+	\arrow[from=1-6, to=1-7]
+	\arrow[from=1-6, to=2-6]
+	\arrow[from=1-7, to=2-7]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=1-2]
+	\arrow[from=2-2, to=2-1]
+	\arrow[from=2-2, to=2-4]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-4, to=1-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-4, to=1-6]
+	\arrow[from=2-6, to=2-4]
+	\arrow[from=2-6, to=2-7]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-7, to=1-6]
+\end{tikzcd}\]
+
+We say that $H_1 \leftsquigarrow S \rightsquigarrow H_2$ is a pre-critical pair if $[m_1, m_2] : L_1 + L_2 \to S$ is epi; it is joinable if there
+\end{mydefinition}
+exists $W$ such that $H_1 \stackrel{*}{\rightsquigarrow} W \stackrel{*}{\leftsquigarrow} H_2$.
+
+\begin{mydefinition} \label{def:parallel_pair}
+    Let $\mathcal{R}$ be a DPO system with rules $\catspan {L_1} {K_1} {R_1}$ and $\catspan {L_2} {K_2} {R_2}$ .
+Consider two derivations with common source $S$ as in Definition \ref{dfn:pcPair}. We say that $H_1 \leftsquigarrow S \rightsquigarrow H_2$ is a parallel pair if there exist $g_1 : L_1 \to C_2$ and $g_2 : L_2 \to C_1$ making the diagram below commute:
+
+\[\begin{tikzcd}[ampersand replacement=\&, column sep=small]
+	{K_1} \& {L_1} \&\& {L_2} \& {K_2} \\
+	{C_1} \&\& S \&\& {C_2}
+	\arrow["{f_1}", hook, from=1-1, to=1-2]
+	\arrow[from=1-1, to=2-1]
+	\arrow[from=1-2, to=2-3]
+	\arrow[from=1-2, to=2-5]
+	\arrow[from=1-4, to=2-1]
+	\arrow[from=1-4, to=2-3]
+	\arrow["{f_2}"', hook', from=1-5, to=1-4]
+	\arrow[from=1-5, to=2-5]
+	\arrow[from=2-1, to=2-3]
+    \arrow[from=2-5, to=2-3]
+\end{tikzcd}\]
+
+\end{mydefinition}
+
+
+
+Let's give an example, consider the following rewrite system:
 
 \begin{myproposition}
-    Let $R$ be the output of Algo.~\ref{algo1}.
-    \begin{enumerate}
-        \item (Correctness) For each $(\epsilon,F) \in R$, $\epsilon$ is an epimorphism.
-        \item (Exhaustiveness) For any non-parallel pre-critical pair $L_1 + L_2 \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$, we have $(\epsilon,F) \in R$.
-        \item (Effectiveness) $R$ contains only non-parallel pre-critical pairs.
-    \end{enumerate}
+    Let $R$ be the output of Algo.~\ref{algo1}. Then:
+    \begin{description}
+        \item[Correctness] For each $(\epsilon,F) \in R$, $\epsilon$ is an epimorphism.
+        \item[Exhaustiveness] For any critical pair $L_1 + L_2 \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$, we have $(\epsilon,F) \in R$.
+        \item[Effectiveness] $R$ contains critical pairs.
+    \end{description}
 \end{myproposition}
 
-\begin{enumerate}
-    \item
-    \item 
-\end{enumerate}
 % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHEQBfU9TXfIRRkAjFVqMWbADIB9YCK4ACANRK5wAExduvEBmx4CRMpvH1mrRCACinHn0OCTpAMznJVkAA1u4mFAA5vBEoABmAE4QALZIZCA4EEgi1ABGMGBQSAC0rsQOIJExcdSJyWkZWYh5BUWxiCkJSYia1AxYYF5QEDg4ASDUABYwdFUJAO4Qw6MIbXTpDAAK-EZCIBFYgYM4AxKWbACOuuFR9a1NSK4VmTl5cwvLTsbWG1s71BZS1gAex4WnSHOZWq1yqdxADHmMCWK2c1gYMDC7z2XxAAE8-FwgA
-\begin{tikzcd}
+\[\begin{tikzcd}
 G \arrow[d, bend right] \arrow[d, bend left]             \\
 L_{1} + L_{2} \arrow[d, "q"', two heads, dotted]         \\
 EG \arrow[d, "x"', bend right] \arrow[d, "y", bend left] \\
 X                                                       
 \end{tikzcd}
-
+\qquad
 % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAHEQBfU9TXfIRRkAjFVqMWbADIB9YCK4ACANRK5wAExduvEBmx4CRMpvH1mrRCACinHn0OCiI0meoWp1gBrdxMKABzeCJQADMAJwgAWyQyEBwIJFcQACMYMCgkAFoAZnjPKxAwkGoGOnSGAAV+IyEQCKxAgAscXXCo2MR4xOTqdMykfI9JIsD24s6+hKTETTKsMCKoCBwcANKQZpg6LOscAHcIbd2EMoqYatrna0aWtpHLNgBHCciYpHmZocevEAAPAC8AE9NuVKjUnMZbk1Wm8pogUr1ELlfkVnv94R9utRkaiJE9rGEMUpAUpAhi-FwgA
 \begin{tikzcd}
-G \arrow[d, "f"', bend right] \arrow[d, "g", bend left] \arrow[rdd, "fqx = gqx"] &   \\
+G \arrow[d, "f"', bend right] \arrow[d, "g", bend left] \arrow[rdd, bend left, "fqx = gqx"] &   \\
 L_{1} + L_{2} \arrow[d, "q"', two heads, dotted] \arrow[rd, "qx"]                &   \\
 EG \arrow[r, "x=y"']                                                             & X
-\end{tikzcd}
+\end{tikzcd}\]
 
-\section{13 June 2024}
+% \section{13 June 2024}
 
-\begin{algorithm}
-    \caption{An algorithm for enumerating non-parallel critical pairs}\label{algo2}
+\begin{mydefinition}[Pre-critical pair with interface {\cite[Def.~3.1]{DBLP:journals/mscs/BonchiGKSZ22a}}]
+    Let $\mathcal{R}$ be a DPO system with rules $\catspan {L_i} {K_i} {R_i} [f_i] [g_i]$ where $i \in \{1,2\}$ are two rewrite rules. Consider two derivations with source $S \leftarrow J$
+
+% https://q.uiver.app/#q=WzAsMTIsWzAsMCwiUl8xIl0sWzEsMCwiS18xIl0sWzIsMCwiTF8xIl0sWzQsMCwiTF8yIl0sWzUsMCwiS18yIl0sWzYsMCwiUl8yIl0sWzAsMSwiSF8xIl0sWzEsMSwiQ18xIl0sWzMsMSwiUyJdLFs1LDEsIkNfMiJdLFs2LDEsIkhfMiJdLFszLDIsIkoiXSxbMCw2XSxbMSwwXSxbMSwyXSxbMSw3XSxbMiw4LCJ7Zl8xfSJdLFszLDgsIntmXzJ9IiwyXSxbNCwzXSxbNCw1XSxbNCw5XSxbNSwxMF0sWzYsMSwiIiwwLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lciIsImJvZHkiOnsibmFtZSI6Im5vbmUifSwiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFs3LDZdLFs3LDhdLFs4LDEsIiIsMCx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIiLCJib2R5Ijp7Im5hbWUiOiJub25lIn0sImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbOCw0LCIiLDAseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIiwiYm9keSI6eyJuYW1lIjoibm9uZSJ9LCJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzksOF0sWzksMTBdLFsxMCw0LCIiLDAseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIiwiYm9keSI6eyJuYW1lIjoibm9uZSJ9LCJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzExLDksIiIsMCx7ImN1cnZlIjoxfV0sWzExLDcsIiIsMCx7ImN1cnZlIjotMX1dLFsxMSw4LCIiLDAseyJjb2xvdXIiOlsxMjAsNjAsNjBdLCJzdHlsZSI6eyJuYW1lIjoiYWRqdW5jdGlvbiJ9fV1d
+\[\begin{tikzcd}[ampersand replacement=\&]
+	{R_1} \& {K_1} \& {L_1} \&\& {L_2} \& {K_2} \& {R_2} \\
+	{H_1} \& {C_1} \&\& S \&\& {C_2} \& {H_2} \\
+	\&\&\& J
+	\arrow[from=1-1, to=2-1]
+	\arrow[from=1-2, to=1-1]
+	\arrow[from=1-2, to=1-3]
+	\arrow[from=1-2, to=2-2]
+	\arrow["{{m_1}}", from=1-3, to=2-4]
+	\arrow["{{m_2}}"', from=1-5, to=2-4]
+	\arrow[from=1-6, to=1-5]
+	\arrow[from=1-6, to=1-7]
+	\arrow[from=1-6, to=2-6]
+	\arrow[from=1-7, to=2-7]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=1-2]
+	\arrow[from=2-2, to=2-1]
+	\arrow[from=2-2, to=2-4]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-4, to=1-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-4, to=1-6]
+	\arrow[from=2-6, to=2-4]
+	\arrow[from=2-6, to=2-7]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-7, to=1-6]
+	\arrow[curve={height=-6pt}, from=3-4, to=2-2]
+	\arrow["\dashv"{anchor=center, rotate=90}, color={rgb,255:red,92;green,214;blue,92}, draw=none, from=3-4, to=2-4]
+	\arrow[curve={height=6pt}, from=3-4, to=2-6]
+\end{tikzcd}\]
+
+We say that $(H_1 \leftarrow J) \leftsquigarrow (S \leftarrow J) \rightsquigarrow (H_2 \leftarrow J)$ is a pre-critical pair if $[m_1, m_2] : L_1 + L_2 \rightarrow S$ is epi and {\color{green}T} is a pullback; it is joinable if there exists $W \leftarrow J$ such that $(H_1 \leftarrow J) \stackrel{*}{\rightsquigarrow} (W \leftarrow J) \stackrel{*}{\leftsquigarrow} (H_2 \leftarrow J)$.
+\end{mydefinition}
+
+\begin{algorithm}[H]
+    \caption{An algorithm for enumerating pre-critical pairs}\label{algo2}
     \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}\SetKw{Yield}{yield}
     \Input{rewrite rules $\rho = \{ L_i \overset{f_i}{\leftarrow} K_i \overset{g_i}{\rightarrow} R_i \}_{i \in I}$}
-    \Output{epimorphisms with interface $
-    \{ \{ L_i + L_j \overset{\epsilon}{\twoheadrightarrow} S_{ij\gamma} \leftarrow J_{ij\gamma} \}_{\gamma \in I_{ij}} \}_{(i,j) \in I^2}$}
-    \Yield{foo}\;
-    \For{(i,j) \in I^}{}
+    \Output{epimorphisms with interface $\{ \{ L_i + L_j \overset{\epsilon}{\twoheadrightarrow} S_{ij\gamma} \leftarrow J_{ij\gamma} \}_{\gamma \in I_{ij}} \}_{(i,j) \in I^2}$}
+    \For{$(i,j) \in I^2$}{
+        $E_s = \mathcal{P}((\mathrm{label};p_1) \times_{\mathcal{E}_{L_i \times L_j}} (\mathrm{label};p_2))$\;
+        \tcc{subsets of the equalizer of $\Bigl( % https://q.uiver.app/#q=WzAsMixbMCwwLCJcXG1hdGhjYWx7RX1fe0xfaSBcXHRpbWVzIExfan0iXSxbMiwwLCJcXFNpZ21hIl0sWzAsMSwibGFiZWwgOyBwXzIiLDIseyJjdXJ2ZSI6MX1dLFswLDEsImxhYmVsIDsgcF8xIiwwLHsiY3VydmUiOi0xfV1d
+\begin{tikzcd}[ampersand replacement=\&,cramped]
+	{\mathcal{E}_{L_i \times L_j}} \&\& \Sigma
+	\arrow["{label ; p_2}"', curve={height=6pt}, from=1-1, to=1-3]
+	\arrow["{label ; p_1}", curve={height=-6pt}, from=1-1, to=1-3]
+\end{tikzcd} \Bigr)$ in $\mathbf{Set}$ (edges of $L_i\times L_j$ with the same label)} \label{algo2:line}
+        $V_s = \mathcal{P}(\mathcal{V}_{L_{i} \times L_{j}})$\;
+        $\mathcal{G} = \lbrace \langle e, v\rangle_{L_{i} \times L_{j}} \ | \ e \in E_s, \ v \in V_s \rbrace$\;
+        %\tcc{induced subgraphs}
+        \tcc{$\langle e,v \rangle$ is the smallest graph containing the edges $e$ and the vertices $v$ (we may have to add vertices to $v$ to account for sources and targets of edges not present in $v$).}
+        \For{$\gamma \leftarrow \mathcal{G}$}{
+            $(S_{ij\gamma}, \epsilon_{ij\gamma}) = \mathtt{coeq}_{\gamma}(p_1;q_1, p_2;q_2)$\;
+            \tcc{the coequalizer of (% https://q.uiver.app/#q=WzAsMyxbMCwwLCJcXGdhbW1hIl0sWzEsMCwiTF8xK0xfMiJdLFsyLDAsIlNfe2lqXFxnYW1tYX0iXSxbMCwxLCJwXzIgOyBxXzIiLDIseyJjdXJ2ZSI6MX1dLFswLDEsInBfMSA7IHFfMSIsMCx7ImN1cnZlIjotMX1dLFsxLDIsIlxcZXBzaWxvbl97aWpcXGdhbW1hfSIsMCx7InN0eWxlIjp7ImJvZHkiOnsibmFtZSI6ImRhc2hlZCJ9LCJoZWFkIjp7Im5hbWUiOiJlcGkifX19XV0=
+\begin{tikzcd}[ampersand replacement=\&]
+	\gamma \& {L_i+L_j} \& {S_{ij\gamma}}
+	\arrow["{p_2 ; q_2}", near end, bend left = 15, from=1-1, to=1-2]
+	\arrow["{p_1 ; q_1}"', near end, bend right = 15, from=1-1, to=1-2]
+	\arrow["{\epsilon_{ij\gamma}}", dashed, two heads, from=1-2, to=1-3]
+\end{tikzcd}) in $\mathbf{Hyp}_\Sigma$}
+            $(C_{ij\gamma}^L,c_{ij\gamma}^L) = (q_1;\epsilon_{ij\gamma}) \compl f_i$\;
+            \tcc{the pushout complement of $\Bigl( % https://q.uiver.app/#q=WzAsNCxbMCwwLCJMX2oiXSxbMSwwLCJLX2oiXSxbMCwxLCJTX3tpalxcZ2FtbWF9Il0sWzEsMSwiQ197bGpcXGdhbW1hfV5SIl0sWzAsMiwie3FfMTtcXGVwc2lsb25fe2lqXFxnYW1tYX19IiwyXSxbMSwwLCJ7Zl9qfSIsMl0sWzEsM10sWzIsMSwiIiwwLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lciIsImJvZHkiOnsibmFtZSI6Im5vbmUifSwiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dLFszLDIsIntjX3tsalxcZ2FtbWF9XlJ9Il1d
+\begin{tikzcd}[ampersand replacement=\&]
+	{L_i} \& {K_i} \\
+	{S_{ij\gamma}} \& {C_{ij\gamma}^R}
+	\arrow["{{q_1;\epsilon_{ij\gamma}}}"', from=1-1, to=2-1]
+	\arrow["{{f_i}}"', from=1-2, to=1-1]
+	\arrow[from=1-2, to=2-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=1-2]
+	\arrow["{{c_{ij\gamma}^L}}", from=2-2, to=2-1]
+\end{tikzcd} \Bigr)$ in $\mathbf{Hyp}_\Sigma$}
+            $(C_{ij\gamma}^R,c_{ij\gamma}^R) = (q_2;\epsilon_{ij\gamma}) \compl f_j$\;
+            \tcc{the pushout complement of $\Bigl(  % https://q.uiver.app/#q=WzAsNCxbMCwwLCJMX2oiXSxbMCwxLCJTX3tpalxcZ2FtbWF9Il0sWzEsMSwiQ197bGpcXGdhbW1hfV5SIl0sWzEsMCwiS19qIl0sWzMsMCwiZl9qIiwyXSxbMCwxLCJxXzI7XFxlcHNpbG9uX3tpalxcZ2FtbWF9IiwyXSxbMiwxLCJjX3tsalxcZ2FtbWF9XlIiXSxbMywyXSxbMSwzLCIiLDEseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XV0=
+\begin{tikzcd}[ampersand replacement=\&]
+	{L_j} \& {K_j} \\
+	{S_{ij\gamma}} \& {C_{ij\gamma}^R}
+	\arrow["{q_2;\epsilon_{ij\gamma}}"', from=1-1, to=2-1]
+	\arrow["{f_j}"', from=1-2, to=1-1]
+	\arrow[from=1-2, to=2-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=1-2]
+	\arrow["{c_{ij\gamma}^R}", from=2-2, to=2-1]
+\end{tikzcd}\Bigr)$ in $\mathbf{Hyp}_\Sigma$}
+            $J_{ij\gamma} = c_{ij\gamma}^L \times_{S_{ij\gamma}} c_{ij\gamma}^R$\;
+            \tcc{the pullback of $\Bigl(\begin{tikzcd}[ampersand replacement=\&]
+                    	J_{ij\gamma} \& {C^R_{ij\gamma}} \\
+                    	{C^L_{ij\gamma}} \& S_{ij\gamma}
+                    	\arrow["{\pi_2}", from=1-1, to=1-2]
+                    	\arrow["{\pi_1}"', from=1-1, to=2-1]
+                    	\arrow["\ulcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
+                    	\arrow["{c_{ij\gamma}^R}", from=1-2, to=2-2]
+                    	\arrow["{c_{ij\gamma}^L}"', from=2-1, to=2-2]
+                    \end{tikzcd}\Bigr)$ in $\mathbf{Hyp}_\Sigma$}
+            \Yield{$L_i + L_j \overset{\epsilon_{ij\gamma}}{\twoheadrightarrow} S_{ij\gamma} \xleftarrow{\pi_1;c_{ij\gamma}^L} J_{ij\gamma}$}\;
+        }
+    }
 \end{algorithm}
 
+\begin{mylemma}
+    Let $L_1 \xleftarrow{f_1} K_1 \xrightarrow[]{} R_1$ and $L_2 \xleftarrow{f_2} K_2 \xrightarrow[]{} R_2$ be two rewrites. Then the coproduct $L_1 + L_2$ is a parallel pre-critical pair. 
+\end{mylemma}
+\begin{myproof}
+    Let $(L_1 + L_2, i_1, i_2)$ be the coproduct of $L_1$ and $L_2$.\\
+    We start by showing that $(L_1 + L_2, i_1, [f_1,i_2])$ is the pushout of $K_1 + L_2 \xleftarrow{\imath_{K_1}} K_1 \xrightarrow{f_1} L_1$. It is clear that $q_1$ and $[f_1, i_2]$ make the diagram commute. Now we need to show that $(L_1 + L_2, i_1, [f_1,i_2])$ has the universal property.\\
+    Since we are working with left-linear system, $f_1$ is a monomorphism and $K_1 + L_2$ is the unique pushout complement that makes the diagram $[K_1, f_1, \imath_{K_1}]$ a pushout diagram. (A similar argument applies to the right side of the diagram).
+    % https://q.uiver.app/#q=WzAsMTEsWzYsMCwiS18yIl0sWzUsMCwiTF8yIl0sWzIsMCwiS18xIl0sWzMsMCwiTF8xIl0sWzQsMSwiTF8xICsgTF8yIl0sWzYsMSwiTF8xICsgS18yIl0sWzIsMSwiS18xICsgTF8yIl0sWzAsMCwiUl8xIl0sWzAsMSwiUl8xICsgTF8yIl0sWzgsMCwiUl8yIl0sWzgsMSwiTF8xICsgUl8yIl0sWzAsMSwiZl8yIiwyXSxbMiwzLCJmXzEiXSxbMyw0LCJpXzEiXSxbMSw0LCJpXzIiLDJdLFswLDUsIlxcaW1hdGhfe0tfMn0iXSxbNSw0LCJbaV8yLGZfMl0iXSxbMiw2LCJcXGltYXRoX3tLXzF9IiwyXSxbNiw0LCJbZl8xLGlfMl0iLDJdLFsyLDcsImdfMSIsMl0sWzcsOF0sWzYsOCwiW2dfMSxcXHRleHR7aWR9X3tMXzJ9XSJdLFswLDksImdfMiJdLFs1LDEwLCJbXFx0ZXh0e2lkfV97TF8xfSxnXzJdIiwyXSxbOSwxMF1d
+\[\begin{tikzcd}
+	{R_1} && {K_1} & {L_1} && {L_2} & {K_2} && {R_2} \\
+	{R_1 + L_2} && {K_1 + L_2} && {L_1 + L_2} && {L_1 + K_2} && {L_1 + R_2}
+	\arrow[from=1-1, to=2-1]
+	\arrow["{g_1}"', from=1-3, to=1-1]
+	\arrow["{f_1}", from=1-3, to=1-4]
+	\arrow["{\imath_{K_1}}"', from=1-3, to=2-3]
+	\arrow["{i_1}", from=1-4, to=2-5]
+	\arrow["{i_2}"', from=1-6, to=2-5]
+	\arrow["{f_2}"', from=1-7, to=1-6]
+	\arrow["{g_2}", from=1-7, to=1-9]
+	\arrow["{\imath_{K_2}}", from=1-7, to=2-7]
+	\arrow[from=1-9, to=2-9]
+	\arrow["{[g_1,\text{id}_{L_2}]}", from=2-3, to=2-1]
+	\arrow["{[f_1,i_2]}"', from=2-3, to=2-5]
+	\arrow["{[i_2,f_2]}", from=2-7, to=2-5]
+	\arrow["{[\text{id}_{L_1},g_2]}"', from=2-7, to=2-9]
+\end{tikzcd}\]
+
+
+Consider the inclusions $\imath_{L_1} : L_1 \to L_1 + K_2$ and $\imath_{L_2} : L_2 \to K_1 + L_2$; we have that $\imath_{L_1} ; [f_1, \id] = \imath_{L_2} ; [\id, f_2]$. We conclude that $L_1 + L_2$ is a parallel critical pair since the identity is an epimorphism.
+
+% https://q.uiver.app/#q=WzAsOCxbNCwwLCJLXzIiXSxbMywwLCJMXzIiXSxbMCwwLCJLXzEiXSxbMSwwLCJMXzEiXSxbMiwxLCJMXzEgKyBMXzIiXSxbNCwxLCJMXzEgKyBLXzIiXSxbMCwxLCJLXzEgKyBMXzIiXSxbMSwxXSxbMCwxLCJmXzIiLDJdLFsyLDMsImZfMSJdLFszLDQsInFfMSJdLFsxLDQsInFfMiIsMl0sWzAsNSwiXFxpbWF0aF97S18yfSJdLFs1LDQsIltcXHRleHR7aWR9X3tMXzF9LGZfMl0iXSxbMiw2LCJcXGltYXRoX3tLXzF9IiwyXSxbNiw0LCJbZl8xLFxcdGV4dHtpZH1fe0xfMn1dIiwyXSxbMyw1LCIiLDEseyJzdHlsZSI6eyJ0YWlsIjp7Im5hbWUiOiJob29rIiwic2lkZSI6InRvcCJ9fX1dLFsxLDYsIiIsMSx7InN0eWxlIjp7InRhaWwiOnsibmFtZSI6Imhvb2siLCJzaWRlIjoiYm90dG9tIn19fV1d
+\[\begin{tikzcd}
+	{K_1} & {L_1} && {L_2} & {K_2} \\
+	{K_1 + L_2} & {} & {L_1 + L_2} && {L_1 + K_2}
+	\arrow["{f_1}", from=1-1, to=1-2]
+	\arrow["{\imath_{K_1}}"', from=1-1, to=2-1]
+	\arrow["{q_1}", from=1-2, to=2-3]
+	\arrow[hook, from=1-2, to=2-5]
+	\arrow[hook', from=1-4, to=2-1]
+	\arrow["{q_2}"', from=1-4, to=2-3]
+	\arrow["{f_2}"', from=1-5, to=1-4]
+	\arrow["{\imath_{K_2}}", from=1-5, to=2-5]
+	\arrow["{[f_1,\text{id}_{L_2}]}"', from=2-1, to=2-3]
+	\arrow["{[\text{id}_{L_1},f_2]}", from=2-5, to=2-3]
+\end{tikzcd}\]
+
+\end{myproof}
+
+
+\begin{myproposition}
+    \noindent
+    \begin{description}
+        \item[Correctness] \label{item:correctness} Each result $L_i + L_j \overset{\epsilon_{ij\gamma}}{\twoheadrightarrow} S_{ij\gamma} \xleftarrow{\pi_1;c_{ij\gamma}^L} J_{ij\gamma}$ of Algo.~\ref{algo2} is a pre-critical pair.
+        \item[Exhaustiveness] \label{item:exhaustiveness} Any pre-critical pair $L_i + L_j \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$ can be yielded by Algo.~\ref{algo2}.
+    \end{description}
+\end{myproposition}
+\begin{myproof}[Proof of correctness]
+   A coequalizer is an epimorphism, thus $\epsilon_{ij\gamma}$ is epi. $J_{ij\gamma}$ is the pullback required by the pre-critical pair with interface definition, by construction.
+
+   Therefore, each result yielded is a valid precritical-pair with interface.
+   
+\end{myproof}
+\begin{myproof}[Proof of exhaustiveness]
+Let $L_i + L_j \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$ be a precritical-pair with interface.
+
+An epimorphism of hypergraphs is surjective on nodes and on hyperedges because the category of hypergraphs is a presheaf category.
+
+Thus, each node and each hyperedge has a non-empty preimage set by $\epsilon$. We can see each of these preimages sets as equivalence classes glued by a coequalizer process, as will be explained by what follows.
+
+The inclusions $\iota_i;\epsilon$ and $\iota_j;\epsilon$ should be monomorphisms for the complements $C_i$ and $C_j$ to exist.
+
+
+problem : there are not necessarily monomorphisms. There are only injective on hyperedges.
+for example, you could have L1 = 1 -f-> 2 3 -g-> 4 and in X have 1 -f-> 2 -g-> 4.
+% We must only consider ma-cospans (ma hypergraphs with interface) for it to be true (Definition 31 Bonchi III, follow section 5 of Bonchi III)
+
+% https://q.uiver.app/#q=WzAsOSxbMSwwLCJMX2kiXSxbMywwLCJMX2oiXSxbMiwxLCJMX2krTF9qIl0sWzIsMiwiWCJdLFsyLDMsIkoiXSxbMCwyLCJDX2kiXSxbNCwyLCJDX2oiXSxbMCwwLCJLX2kiXSxbNCwwLCJLX2oiXSxbMCwyLCJcXGlvdGFfaSJdLFsxLDIsIlxcaW90YV9qIiwyXSxbMiwzLCJcXGVwc2lsb24iLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJlcGkifX19XSxbMCwzLCJcXGlvdGFfaTtcXGVwc2lsb24iLDJdLFsxLDMsIlxcaW90YV9qO1xcZXBzaWxvbiJdLFs0LDVdLFs0LDZdLFs1LDNdLFs2LDNdLFs3LDBdLFs4LDFdLFs3LDVdLFs4LDZdLFszLDcsIiIsMCx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dLFszLDgsIiIsMCx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dLFs0LDMsIiIsMCx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dXQ==
+\[\begin{tikzcd}[ampersand replacement=\&,cramped]
+	{K_i} \& {L_i} \&\& {L_j} \& {K_j} \\
+	\&\& {L_i+L_j} \\
+	{C_i} \&\& X \&\& {C_j} \\
+	\&\& J
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-1, to=3-1]
+	\arrow["{\iota_i}", from=1-2, to=2-3]
+	\arrow["{\iota_i;\epsilon}"', from=1-2, to=3-3]
+	\arrow["{\iota_j}"', from=1-4, to=2-3]
+	\arrow["{\iota_j;\epsilon}", from=1-4, to=3-3]
+	\arrow[from=1-5, to=1-4]
+	\arrow[from=1-5, to=3-5]
+	\arrow["\epsilon"{description}, two heads, from=2-3, to=3-3]
+	\arrow[from=3-1, to=3-3]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=3-3, to=1-1]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=3-3, to=1-5]
+	\arrow[from=3-5, to=3-3]
+	\arrow[from=4-3, to=3-1]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=135}, draw=none, from=4-3, to=3-3]
+	\arrow[from=4-3, to=3-5]
+\end{tikzcd}\]
+
+Therefore, two nodes in a preimage equivalence class cannot come from the same hypergraph and two hyperedges in a preimage equivalence class cannot come from the same hypergraph. The preimage equivalence classes can therefore have at most two elements each.
+
+We construct the hypergraph $\gamma$ with the preimage equivalence classes of nodes as nodes and the preimage equivalence classes of hyperedges as hyperedges. We consider two hypergraph homomorphisms $F_1 : \gamma \to L_1 + L_2$ and $F_2 : \gamma \to L_1 + L_2$ such that $F_1$ maps an equivalence class node (hyperedge) to the node (hyperedge) coming from $L_1$ if possible and $F_2$ maps an equivalence class node (hyperedge) to the node (hyperedge) coming from $L_2$ if possible.
+
+$X$ is the coequalizer of the diagram % https://q.uiver.app/#q=WzAsMyxbMiwwLCJMXzErTF8yIl0sWzQsMF0sWzAsMCwiXFxnYW1tYSJdLFsyLDAsIkZfMSIsMCx7ImN1cnZlIjotMn1dLFsyLDAsIkZfMiIsMix7ImN1cnZlIjoyfV1d
+\begin{tikzcd}[ampersand replacement=\&,cramped]
+	\gamma \&\& {L_1+L_2} \&\& {}
+	\arrow["{F_1}", curve={height=-12pt}, from=1-1, to=1-3]
+	\arrow["{F_2}"', curve={height=12pt}, from=1-1, to=1-3]
+\end{tikzcd}.
+
+$\gamma$ contains pairs of nodes (hyperedges) coming from $L_1$ and $L_2$, therefore it must belong to $\mathcal{G}$ as defined in the algorithm and $\epsilon : L_1 + L_2 \to X$ must have been constructed by the algorithm. $F : J \to X$ follows from $\epsilon$.
+
+\end{myproof}
+
+
+Algo.~\ref{algo2} enumerates pre-critical pairs, regardless of them being parallel or not. Taking non-empty subsets in Line~\ref{algo2:line} does not help. The following conjecture would give an optimisation of Algo.~\ref{algo2} so that it yields only non-parallel pre-critical pairs (\ie, critical pairs).
+\begin{myproposition}
+    Given two rewrite rules $\catspan {L_i} {K_i} {R_i} [f_i] [g_i]$ where $i \in \{1,2\}$,
+    a pre-critical pair $L_1 + L_2 \overset{\epsilon}{\twoheadrightarrow} S \xleftarrow{c} J$ is parallel iff the following holds:
+    \begin{enumerate}
+        \item no edges from $L_1$ and $L_2$ are glued, \ie, have the same image under $\epsilon : L_1 + L_2 \rightarrow S$, and
+        \item if two nodes from $L_1$ and $L_2$ are glued, they are in the image of $f_1$ and $f_2$.
+    \end{enumerate}
+\end{myproposition}
+\begin{myproof}[Proof of $\Rightarrow$]
+    Suppose we have a parallel pair
+\[
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAGkB9ARhAF9S6TLnyEU3clVqMWbADI9+gkBmx4CRAMyTq9Zq0QgFAJiVC1oogBYd0-Wy6mB5kRpRluUvbMMBhRc4qwupiyMaknroyBiAAymZBFm7INpF2PiD+TsqqrqHhlFH2hgrcAAQA1GUm-FIwUADm8ESgAGYAThAAtkhkIDgQSBL9dFgMbAAWEBAA1iBFGa0Byh3dSNr9g4jhI2OT03MLMUum1Ax0AEYwDAAKwZaG7VgNEzgJqz2IwwNIAKyBHyQOx+iH+K06nxsmz+1Bwo3Ghims3eEKQADZYVtfrD4ftkQDUYg+iCrAS1ogNiC0WTPsCtlCGFgwDE4BBGVB5iAJjA6BzEGAmAwGDi9oZIMyUeTvltqeDyQB2TEwrk8vn9ADuEG5vIQNKGSsQit2CK5B05jIlhigdDg3I5eu2BqNcNFpuRZyZMWttvqtT4QA
+\begin{tikzcd}
+K_1 \arrow[r, "f_1", hook] \arrow[d] & L_1 \arrow[rd] \arrow[rrrd] \arrow[r, dashed, hook] & L_1 + L_2 \arrow[d, two heads] & L_2 \arrow[ld] \arrow[llld] \arrow[l, dashed, hook] & K_2 \arrow[l, "f_2"', hook] \arrow[d] \\
+C_1 \arrow[rr, hook]                 &                                                     & S                              &                                                     & C_2 \arrow[ll, hook]                 
+\end{tikzcd}
+\]
+\begin{itemize}
+    \item Let $v_i \in L_1 + L_2$ for $i = 1,2$ be mapped to the same $v \in S$. Without loss of generality suppose $v_1 \in L_1, v_2 \in L_2$. Since this is a parallel pair, there are mappings $L_2 \rightarrow C_1$, $L_1 \rightarrow C_2$. Let $v_2^{'}$ be image of $v_2$ under such mapping. Because the triangle commutes, $v_2^{'}$ must be sent to $v \in S$. But S is a pushout, so the identified elements of $C_1, L_1$ must be present in K, so $v_1$ has a preimage in K, hence preserved by $f_1$. Similarly for $v_2$.
+    \item Suppose there are glued edges. Let $e_i \in L_i$ for $i = 1,2$ be mapped to the same $e \in S$. As before, for the identified vertices we can conclude that they are preserved by $f_1, f_2$ by diagram chasing. By the same argument, it must mean that those edges are preserved by $f_1, f_2$, too, so they must have a pre-image in $K_1, K_2$. But $K_1, K_2$ are discrete, so such edges cannot exist.  
+\end{itemize}
+\end{myproof}
+\begin{myproof}[Proof of $\Leftarrow$]
+    Suppose the assumptions 1 and 2 hold, let us prove that the pre-critical pair is parallel. Consider 
+    % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAGkB9ARhAF9S6TLnyEU3clVqMWbADI9+gkBmx4CRAMyTq9Zq0QgFAJiVC1oogBYd0-Wy6mB5kRpRluUvbMMBhRc4qwupiyMaknroyBiAAymZBFm7INpF2PiD+TlIwUADm8ESgAGYAThAAtkhkIDgQSBK1dFgMbAAWEBAA1iBR9obFAcpllUjatfWI4U0t7Z09fRmDptQMdABGMAwACsGWhqVYeW04CSNViI11SACsgedI09eId8PlFzYTt-fvSABs1GerxKv0QNWeVh+o0Q42efz4FD4QA
+\[\begin{tikzcd}
+K_1 \arrow[r, "f_1", hook] \arrow[d] & L_1 \arrow[rd] &   & L_2 \arrow[ld] & K_2 \arrow[l, "f_2"', hook] \arrow[d] \\
+C_1 \arrow[rr]                       &                & S &                & C_2 \arrow[ll]                       
+\end{tikzcd}\]
+The proof is by diagram chasing.
+
+If no nodes are glued, \ie, $\epsilon: L_1 + L_2 \rightarrow S$ is a monomorphism on nodes, then on nodes $S = L_1 + L_2$. Consider the right square. S is a pushout, so $C_2 \simeq L_1$ on nodes. Then we can define $L_1 \rightarrow C_2$ as identity on nodes and get a parallel pair.
+
+Otherwise, consider two nodes $v_i \in L_i$ for i=1,2 with the same image v in S.
+By assumption, $v_2$ is in the image of $f_2 : K_2 \rightarrow L_2$. 
+
+Let $v_2^{'} \in C_2$ be the image of $v_2$ under $K_2 \rightarrow C_2$.
+
+Define the morphism $L_1 \rightarrow C_2$ by sending $v_1$ into $v_2^{'}$ and identity on the rest of the nodes as before and edges as there are no edges from $L_1$ and $L_2$ glued.
+
+By construction that will make the triangle commute.
+
+Similarly for $L_2 \rightarrow C_1$.
+
+The morphisms $C_i \rightarrow S$ are monomorphisms as a pushout of a monomorphism in an adhesive category. 
+
+\end{myproof}
+
+\bibliographystyle{abbrv}
+\bibliography{ref}
+
 \end{document}
+

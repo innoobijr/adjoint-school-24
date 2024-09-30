@@ -1,0 +1,68 @@
+\begin{algorithm}
+\caption{An algorithm for enumerating non-parallel critical pairs}\label{algo1}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\Input{rewrite rules $\rho = \{ L_i \leftarrow K_i \rightarrow R_i \}_{i \in I}$}
+\Output{set of epimorphisms with interface ${(\epsilon : (L_i + L_j) \twoheadrightarrow X, F : J \to X)}_{i,j \in I}$}
+$R = \varnothing$\;
+\For{$(i,j) \in I \times I$}{
+    $\mathtt{compatible\_edges} = \{ e \in \mathtt{E}_{L_1 \times L_2} \mid p_1(\mathrm{label}(e)) = p_2(\mathrm{label}(e)) \}$\;
+    $\mathtt{gluings\_edges} = \{ s \mid s \in \mathcal{P}(\mathtt{compatible\_edges}), s \neq \varnothing\}$\;
+    \For{$\mathtt{gluing} \in \mathtt{gluings\_edges}$}{
+        $(\mathit{EG},L_1 + L_2 \overset{h}{\twoheadrightarrow} \mathit{EG}) = $ coequalizer $\Biggl($
+            \begin{tikzcd}
+                \mathtt{gluing} \arrow[d, "p_2", bend left] \arrow[d, "p_1"', bend right] \\
+                L_1 + L_2                                                                
+            \end{tikzcd}
+        $\Biggr)$\;
+        $\mathtt{compatible\_nodes} = \{ v \in \mathtt{V}_{\mathit{EG} \times \mathit{EG}} \mid p_1(v) \neq p_2(v) \}$\;
+%        $\mathtt{V}_{EG} = \{(x,y) \ |\ x \neq y \ \& \ x, y \in EG_{V} \}$\;
+%        $\mathtt{gluings\_nodes} = \mathcal{P}((\mathtt{V}_{EG})^2)$\;
+        $\mathtt{gluings\_nodes} = \mathcal{P}(\mathtt{compatible\_nodes})$\;
+        \For{$\mathtt{gluing2} \in \mathtt{gluings\_nodes}$}{
+            $(\mathit{NG},\mathit{EG} \overset{k}{\twoheadrightarrow} \mathit{NG}) = $ coequalizer $\Biggl($
+                \begin{tikzcd}
+                    \mathtt{gluing2} \arrow[d, "p_2^\prime", bend left] \arrow[d, "p_1^\prime"', bend right] \\
+                    \mathit{EG}
+                \end{tikzcd}
+            $\Biggr)$\;
+            \If{$NG$ satisfies the gluing condition and the ma-condition}{
+                $C_1 = $ the pushout complement of $\Bigl($% https://q.uiver.app/#q=WzAsNCxbMCwxLCJDXzEiXSxbMSwxLCJORyJdLFswLDAsIktfMSJdLFsxLDAsIkxfMSJdLFswLDEsInFeMV97Tkd9IiwyXSxbMiwzXSxbMywxLCJxXzE7aDtpIl0sWzIsMF0sWzEsMiwiIiwxLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lciJ9fV1d
+                \begin{tikzcd}[ampersand replacement=\&]
+	{K_1} \& {L_1} \\
+	{C_1} \& NG
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-1, to=2-1]
+	\arrow["{q_1;h;k}", from=1-2, to=2-2]
+	\arrow["{q^1_{NG}}"', from=2-1, to=2-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-2, to=1-1]
+\end{tikzcd}
+                $\Bigr)$\;
+                $C_2 = $ the pushout complement of $\Bigl($
+                \begin{tikzcd}[ampersand replacement=\&]
+	{K_2} \& {L_2} \\
+	{C_2} \& NG
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-1, to=2-1]
+	\arrow["{q_2;h;k}", from=1-2, to=2-2]
+	\arrow["{q^2_{NG}}"', from=2-1, to=2-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-2, to=1-1]
+\end{tikzcd}
+                $\Bigr)$\;
+                $J = $ the pullback of $\Biggl($ % https://q.uiver.app/#q=WzAsNCxbMCwwLCJKIl0sWzAsMSwiQ18xIl0sWzEsMSwiTkciXSxbMSwwLCJDXzIiXSxbMSwyLCJxX3tOR31eMSIsMl0sWzAsMiwiIiwxLHsic3R5bGUiOnsibmFtZSI6ImNvcm5lci1pbnZlcnNlIn19XSxbMCwxLCJwXzEiLDJdLFswLDMsInBfMiJdLFszLDIsInFeMl97Tkd9Il1d
+                    \begin{tikzcd}[ampersand replacement=\&]
+                    	J \& {C_2} \\
+                    	{C_1} \& NG
+                    	\arrow["{p_2}", from=1-1, to=1-2]
+                    	\arrow["{p_1}"', from=1-1, to=2-1]
+                    	\arrow["\ulcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
+                    	\arrow["{q^2_{NG}}", from=1-2, to=2-2]
+                    	\arrow["{q_{NG}^1}"', from=2-1, to=2-2]
+                    \end{tikzcd} $\Biggr)$  \;
+                $R = R \cup \{(h;k,\ p_1;q^1_\mathrm{NG})\}$\;
+            }{
+            }
+        }
+    }
+}
+\Return R\;
+\end{algorithm}
