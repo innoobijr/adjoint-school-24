@@ -7,3 +7,7 @@
 *.toc
 *.do
 .redo
+*.bbl
+*.bcf
+*.blg
+*.run.xml

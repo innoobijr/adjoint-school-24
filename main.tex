@@ -6,12 +6,14 @@
 \usepackage{mathtools}
 \usepackage{tikz}
 \usepackage{microtype}
-
 \usepackage{enumitem}
 \setlist[description]{leftmargin=2em,labelindent=2em}
 
 \usepackage{polyglossia}
 \setmainlanguage{english}
+
+\usepackage{biblatex}
+\addbibresource{ref.bib}
 
 \usepackage{fontspec}
 \setmainfont{EB Garamond}
@@ -33,6 +35,7 @@
 \usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
 \newcommand{\dkcom}[2][1=]{\todo[linecolor=purple,backgroundcolor=purple!25,bordercolor=purple,#1]{#2}}
 \newcommand{\dknote}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+\newcommand\citneed{\textsuperscript{\textcolor{blue}{[citation needed]}}}
 
 \newcommand{\compl}{\mathrel{\backslash}}
 \newcommand \ie {\textit{i.e.}}
@@ -121,8 +124,29 @@
 
 \maketitle
 
+% knuth-bendix
+% plump shows that doesn't work for DPO in general
+% bonchi shows it works for computable DPOs with interfaces
+% we show hypergraphs with interfaces are a computable DPO with interfaces, by giving an algorithm
+
+Confluence is often a very desirable property of rewriting systems. It's not surprising, then, that one of the cornerstones in the study of term rewriting systems is a theorem by Knuth and Bendix\citneed\ that states that such a system is confluent if, and only if, all of its critical pairs are joinable. This is a fundamental result because it reduces the problem of deciding whether a system is confluent to listing its critical pairs, and checking their joinability.
+
+Unfortunatly, that's easier said than done. The problem is not decidable in general. But it can be decidable given appropriate restrictions. If a rewriting system is terminating, for example, there's a clear procedure for checking if critical pairs are joinable (noting that their enumeration, in general, is easier).
+
+In another dramatic turn, Plump\citneed, working in the generalized setting of DPO rewriting systems, showed that in that situation the critical-pair lemma fails, so joinability of critical pairs is not enough to ensure confluence. The simple procedure for terminating rewriting systems, therefore, also fails.
+
+However, here a simple shift in perspect allows one to sidestep this issue. Bonchi\citneed\ shows that when working with DPOs \emph{with interfaces}, one recovers a version of the Knuth-Bendix property, so that joinability of critical pairs is again sufficient for confluence of the system as a whole. With a set of suitable assumptions on the computability of the primitives of this interfaced DPO, we again get a simple procedure for testing whether such a system is, indeed, joinable. Namely, these properties ask that, in the base category of the DPO,
+
+\begin{enumerate}
+	\item pullbacks be computable;
+	\item certain objects related to pairs of rules form a finite and computable set; and
+	\item certain pullback complements are computable.
+\end{enumerate}
+
+Nonetheless, even this conditions notwithstanding, the first step of a critical pair-based analysis of a DPO with interfaces is, evidently, the enumeration of those critical pairs, which finally takes us to the purpose of the present work: to provide an effective algorithm for enumerating the critical pairs in a specific type of DPO with interfaces -- namely, one in the category of \dkcom[]{would be good to add a paragraph talking about the importance of hypergraphs} hypergraphs.
+
 \section{Notation} 
-\textbf{Composition}. We use postfix notation for composition, separated by the symbol "$;$", so if $f$ and $g$ are morphisms in a category, then $f;g$ denotes the morphism obtained by first applying $f$ and then $g$. \\
+\textbf{Composition}. We use postfix notation for composition, separated by the symbol ``$;$'', so if $f$ and $g$ are morphisms in a category, then $f;g$ denotes the morphism obtained by first applying $f$ and then $g$. \\
 
 \textbf{Coequalizer}. When we need to compute a coequalizer, we will write $(Q,q) = \mathtt{coeq}_A(f,g)$ to denote that $(Q, q: B \to Q)$ if the following diagram is a coequalizer:
 
@@ -176,6 +200,12 @@ If we need not mention the third coordinate, we may discard it and simply write 
 %     We let $\Hyp_{\Sigma}$ be the category of hypergraphs with fixed labels and hypergraph homomorphisms.
 % \end{mydefinition}
 
+\section{Definitions}
+
+Our goal is to study critical pairs for PROP rewriting without Frobenius structure. Indeed, we focus on applications of these critical pairs for $\lambda$-calculus.
+
+We introduce several definitions regarding these rewriting systems.
+
 \begin{mydefinition}%[Alternative definition]
     Let $\Sigma$ be a signature, \ie, a set of function symbols. A (directed) hypergraph $G$ is a tuple $(V_G, E_G, s_G, t_G, l_E)$ where $V_G$ and $E_G$ are finite sets of nodes (vertices) and hyperedges, $s_G, t_G: E_G \rightarrow V_G^{*}$ are mappings that assign a string of source and target nodes to each edge and $l_E : E_G \to \Sigma$ is an edge labelling function. \\
 
@@ -183,29 +213,134 @@ If we need not mention the third coordinate, we may discard it and simply write 
 \end{mydefinition}
 
 \begin{mydefinition}
-    A hypergraph with interface is a cospan $\catcospan n G m$ in $\Hyp_{\Sigma}$ where $n$, $m$ are discrete hypergraphs. \dkcom[]{Are f and g monos? In alvarez they're defined as being monos, while in bonchi it is not mentioned. - YES, they are!} \dkcom[]{in bonchi, it is a map J -> G in Hyp, "not necessarily mono even if it is in the majority of the examples}
+    A hypergraph with interface is a cospan $\catcospan n G m$ in $\Hyp_{\Sigma}$ where $n$, $m$ are discrete hypergraphs. 
 \end{mydefinition}
+Let $Csp_D(\textbf{Hyp}_{\Sigma})$ be the category of hypergraphs with interfaces.
+\begin{mydefinition}
 
-To define ma-hypergraphs, we need some new terminology:
+\textbf{Monogamous acyclic hypergraphs}
+A hypergraph G is called monogamous acyclic (ma-hypergraph) if
+\begin{enumerate}
+    \item it contains no cycles (acyclicity)
+    \item every node has at most in- and out- degree 1 (monogamy)
+\end{enumerate}
+Here in- (out-) degree of a node v in an hypergraph G is the number of pairs (h, i) where h is an hyperedge with v as its i-th target (source). We call input nodes those with in-degree 0, denoted by in(G). Similarly, output nodes have out-degree 0 and are denoted by out(G).
+
+A cospan $n \xrightarrow{f} G \xleftarrow{g} m$ in $Csp_D(\textbf{Hyp}_{\Sigma})$ is monogamous acyclic (ma-cospan) when G is an ma-hypergraph, f is mono and its image is in(G), and g is mono and its image is out(G).
+\end{mydefinition}
 
 \begin{mydefinition}
-    The in-degree of a node $v$ in a hypergraph $G$ is the number of pairs $(h, i)$, where $h$ is an hyperedge with $v$ as its $i$-th target.
 
-    Similarly, out-degree of is the number of pairs $(h, j)$ where $h$ is an hyperedge with $v$ as its $j$-th source.
+\textbf{MA-hypergraphs with interface} 
+A hypergraph with interface $G \leftarrow J$ is monogamous acyclic (ma-hypergraph with interface) if it is of the form $G \xleftarrow{[i, o]} n+m$ for an ma-cospan $n \xrightarrow{i} G \xleftarrow{o} m$, up to isomorphism between J and n+m.
+
 \end{mydefinition}
-
-\dkcom[]{the hypergraph definition should have a list of sources then}
-\dkcom[]{bonchi and alvarez allow for multiple inputs, while plump had only multiple outputs.}
 
 \begin{mydefinition}
-    A hypergraph $G$ is monogamous acyclic (or an \emph{ma-hypergraph}) if 
-    \begin{enumerate}
-        \item it contains no cycle, and
-        \item every node has at most in- and out- degree 1.
-    \end{enumerate}
+
+\textbf{Boundary complement} 
+For ma-cospans $i \xrightarrow{a_1} L \xleftarrow{a_2} j$ and $n \xrightarrow{b_1} G \xleftarrow{b_2} m$ and mono $f: L \rightarrow G$, a pushout complement as depicted in $\dag$ below
+% https://q.uiver.app/#q=WzAsNSxbMCwwLCJMIl0sWzEsMCwiaStqIl0sWzAsMSwiRyJdLFsxLDEsIkxee1xcYm90fSJdLFsxLDIsIm4rbSJdLFswLDIsImYiLDJdLFsxLDAsImEgPSBbYV8xLCBhXzJdIiwyXSxbMSwzLCJjPVtjXzEsIGNfMl0iXSxbMywyLCJnIl0sWzIsMSwiXFxkYWciLDEseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbNCwzLCJbZF8xLCBkXzJdIiwyLHsic3R5bGUiOnsiYm9keSI6eyJuYW1lIjoiZGFzaGVkIn19fV0sWzQsMiwiW2JfMSwgYl8yXSJdXQ==
+\[\begin{tikzcd}[ampersand replacement=\&]
+	L \& {i+j} \\
+	G \& {L^{\bot}} \\
+	\& {n+m}
+	\arrow["f"', from=1-1, to=2-1]
+	\arrow["{a = [a_1, a_2]}"', from=1-2, to=1-1]
+	\arrow["{c=[c_1, c_2]}", from=1-2, to=2-2]
+	\arrow["\dag"{description}, "\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=1-2]
+	\arrow["g", from=2-2, to=2-1]
+	\arrow["{[b_1, b_2]}", from=3-2, to=2-1]
+	\arrow["{[d_1, d_2]}"', dashed, from=3-2, to=2-2]
+\end{tikzcd}\]
+is called a boundary complement if $[c_1, c_2]$ is mono and there exists $d_1 : n \rightarrow L^{\bot}$ and $d_2 : m \rightarrow L^{\bot}$ making the above triangle commute and such that \[j+n \xrightarrow{[c_2, d_1]} L \xleftarrow{[c_1, d_2]} m+i\] is an ma-cospan.
+
+\end{mydefinition}
+Note that boundary complements are unique when they exist.
+
+The next definition is a restriction of possible matches.
+\begin{mydefinition}
+
+\textbf{Convex match} 
+$m: L \rightarrow G$ in $\textbf{Hyp}_{\Sigma}$ is a convex match if it is mono and its image m(L) is convex, i.e. for any nodes v, v' in m(L) and any path p form v to v' in G, every hyperedge in p is also in m(L).
+
 \end{mydefinition}
 
-In this work we take the approach of \emph{double pushout rewriting} (DPO rewriting) in $\Hyp_{\Sigma}$. A DPO rule is a span $\catspan L K R$ in $\Hyp_{\Sigma}$. A DPO system $\mathcal{R}$ is a finite set of DPO rules. We say that a hypergraph $G$ rewrites into a hypergraph $H$ if there exist a rule $L \xleftarrow{} K \to R$ and an object $C \in \Hyp_{\Sigma}$ such that the following two squares are pushouts: 
+\begin{mydefinition}
+\textbf{Convex rewriting} Given $n \rightarrow D \leftarrow m$ and $n \rightarrow E \leftarrow m$ ma-cospans, we say $D$ rewrites convexly into E with interface n+m - notation $(D \leftarrow n+m) \Rrightarrow_{R} (E \leftarrow n+m)$ - if there exists ma-rule $L \leftarrow i+j \rightarrow R$, object C, and morphisms such that the diagram below commutes and the squares are pushouts
+% https://q.uiver.app/#q=WzAsNyxbMCwwLCJMIl0sWzEsMCwiaStqIl0sWzIsMCwiUiJdLFswLDEsIkQiXSxbMSwxLCJDIl0sWzIsMSwiRSJdLFsxLDIsIm4rbSJdLFs2LDRdLFsxLDRdLFsxLDAsIlthXzEsIGFfMl0iLDJdLFsxLDIsIltiXzEsIGJfMl0iXSxbMCwzLCJmIiwyXSxbMiw1XSxbNCwzXSxbNCw1XSxbNSwxLCIiLDAseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbMywxLCIiLDAseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbNiwzLCJbcV8xLCBxXzJdIl0sWzYsNSwiW3BfMSwgcF8yXSIsMl1d
+\[\begin{tikzcd}[ampersand replacement=\&]
+	L \& {i+j} \& R \\
+	D \& C \& E \\
+	\& {n+m}
+	\arrow["f"', from=1-1, to=2-1]
+	\arrow["{[a_1, a_2]}"', from=1-2, to=1-1]
+	\arrow["{[b_1, b_2]}", from=1-2, to=1-3]
+	\arrow[from=1-2, to=2-2]
+	\arrow[from=1-3, to=2-3]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=1-2]
+	\arrow[from=2-2, to=2-1]
+	\arrow[from=2-2, to=2-3]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-3, to=1-2]
+	\arrow["{[q_1, q_2]}", from=3-2, to=2-1]
+	\arrow[from=3-2, to=2-2]
+	\arrow["{[p_1, p_2]}"', from=3-2, to=2-3]
+\end{tikzcd}\]
+
+and the following holds:
+\begin{itemize}
+    \item $f: L \rightarrow D$ is a convex match and
+    \item $i+j \rightarrow C \rightarrow D$ is a boundary complement in the leftmost pushout.
+\end{itemize}
+Note that it is implicitly assumed that $i \rightarrow L \leftarrow j$ is an ma-cospan
+\end{mydefinition}
+
+
+\begin{mydefinition}
+
+\textbf{Ma-pre-critical pair} Let $L_1 \leftarrow K-2 \rightarrow R_1$, $L_2 \leftarrow K_2 \rightarrow R_2$ be ma-rewrite rules. Consider two derivations with source $S \leftarrow J$
+
+\[\begin{tikzcd}[ampersand replacement=\&]
+	{R_1} \& {K_1} \& {L_1} \&\& {L_2} \& {K_2} \& {R_2} \\
+	{H_1} \& {C_1} \&\& S \&\& {C_2} \& {H_2} \\
+	\&\&\& J
+	\arrow[from=1-1, to=2-1]
+	\arrow[from=1-2, to=1-1]
+	\arrow[from=1-2, to=1-3]
+	\arrow[from=1-2, to=2-2]
+	\arrow["{{m_1}}", from=1-3, to=2-4]
+	\arrow["{{m_2}}"', from=1-5, to=2-4]
+	\arrow[from=1-6, to=1-5]
+	\arrow[from=1-6, to=1-7]
+	\arrow[from=1-6, to=2-6]
+	\arrow[from=1-7, to=2-7]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-1, to=1-2]
+	\arrow[from=2-2, to=2-1]
+	\arrow[from=2-2, to=2-4]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-4, to=1-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=90}, draw=none, from=2-4, to=1-6]
+	\arrow[from=2-6, to=2-4]
+	\arrow[from=2-6, to=2-7]
+	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-7, to=1-6]
+	\arrow[curve={height=-6pt}, from=3-4, to=2-2]
+	\arrow["\dashv"{anchor=center, rotate=90}, color={rgb,255:red,92;green,214;blue,92}, draw=none, from=3-4, to=2-4]
+	\arrow[curve={height=6pt}, from=3-4, to=2-6]
+\end{tikzcd}\]
+
+We say that $(H_1 \leftarrow J) \leftsquigarrow (S \leftarrow J) \rightsquigarrow (H_2 \leftarrow J)$ is a pre-critical pair if $[m_1, m_2] : L_1 + L_2 \rightarrow S$ is epi and {\color{green}T} is a commuting diagram, and $S \leftarrow J$ is an ma-hypergraph with interface; it is joinable if there exists am ma-hypergraph with interface $W \leftarrow J$ such that $(H_1 \leftarrow J) \stackrel{*}{\rightsquigarrow} (W \leftarrow J) \stackrel{*}{\leftsquigarrow} (H_2 \leftarrow J)$.
+
+\end{mydefinition}
+Note that {\color{green}T} is only required to be commutative, not a pullback. However, up to an isomorphic choice of J there is at most one ma-hypergraph with interface $S \leftarrow J$. 
+All ma-pre-critical pairs are also pre-critical pairs.
+\begin{mydefinition}
+
+\textbf{Left-connected rewriting} An ma-hypergraph G is strongly connected if for every input $x \in in(G)$ and output $y \in out(G)$ there exists a path from x to y. A DPO system with interfaces is called left-connected if it is left-linear, every rule is an ma-rule, and its left-hand side is strongly connected. 
+
+\end{mydefinition}
+
+\dkcom[]{below is about left-connected rewriting for  ma-hypergraphs, which is an alternative for convex rewriting for ma-hypergraphs}
+
+In this work we take the approach of \emph{double pushout rewriting} (DPO rewriting) in $\Hyp_{\Sigma}$.\dkcom[]{shouldn't it be Csp($Hyp_{\Sigma}$, to have interfaces?} A DPO rule is a span $\catspan L K R$ in $\Hyp_{\Sigma}$. A DPO system $\mathcal{R}$ is a finite set of DPO rules. We say that a hypergraph $G$ rewrites into a hypergraph $H$ if there exist a rule $L \xleftarrow{} K \to R$ and an object $C \in \Hyp_{\Sigma}$ such that the following two squares are pushouts: 
 
 % https://q.uiver.app/#q=WzAsNixbMCwxLCJHIl0sWzQsMCwiUiJdLFs0LDEsIkgiXSxbMiwxLCJDIl0sWzIsMCwiSyJdLFswLDAsIkwiXSxbMSwyXSxbMywwXSxbMywyXSxbNCwzXSxbNCwxLCJnIl0sWzQsNSwiZiIsMl0sWzUsMCwibSIsMl0sWzAsMTEsIiIsMix7ImxldmVsIjoxLCJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XSxbMiwxMCwiIiwyLHsibGV2ZWwiOjEsInN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dXQ==
 \[\begin{tikzcd}
@@ -502,10 +637,8 @@ We cannot remove the nodes $5$ and $6$ from the matching without removing the hy
 	\arrow["\lrcorner"{anchor=center, pos=0.125, rotate=180}, draw=none, from=2-7, to=1-6]
 \end{tikzcd}\]
 
-We say that $H_1 \leftsquigarrow S \rightsquigarrow H_2$ is a pre-critical pair if $[m_1, m_2] : L_1 + L_2 \to S$ is epi; it is joinable if there
+We say that $H_1 \leftsquigarrow S \rightsquigarrow H_2$ is a pre-critical pair if $[m_1, m_2] : L_1 + L_2 \to S$ is epi; it is joinable if there exists $W$ such that $H_1 \stackrel{*}{\rightsquigarrow} W \stackrel{*}{\leftsquigarrow} H_2$.
 \end{mydefinition}
-exists $W$ such that $H_1 \stackrel{*}{\rightsquigarrow} W \stackrel{*}{\leftsquigarrow} H_2$.
-
 \begin{mydefinition} \label{def:parallel_pair}
     Let $\mathcal{R}$ be a DPO system with rules $\catspan {L_1} {K_1} {R_1}$ and $\catspan {L_2} {K_2} {R_2}$ .
 Consider two derivations with common source $S$ as in Definition \ref{dfn:pcPair}. We say that $H_1 \leftsquigarrow S \rightsquigarrow H_2$ is a parallel pair if there exist $g_1 : L_1 \to C_2$ and $g_2 : L_2 \to C_1$ making the diagram below commute:
@@ -658,31 +791,42 @@ We say that $(H_1 \leftarrow J) \leftsquigarrow (S \leftarrow J) \rightsquigarro
     Let $L_1 \xleftarrow{f_1} K_1 \xrightarrow[]{} R_1$ and $L_2 \xleftarrow{f_2} K_2 \xrightarrow[]{} R_2$ be two rewrites. Then the coproduct $L_1 + L_2$ is a parallel pre-critical pair. 
 \end{mylemma}
 \begin{myproof}
-    Let $(L_1 + L_2, i_1, i_2)$ be the coproduct of $L_1$ and $L_2$.\\
-    We start by showing that $(L_1 + L_2, i_1, [f_1,i_2])$ is the pushout of $K_1 + L_2 \xleftarrow{\imath_{K_1}} K_1 \xrightarrow{f_1} L_1$. It is clear that $q_1$ and $[f_1, i_2]$ make the diagram commute. Now we need to show that $(L_1 + L_2, i_1, [f_1,i_2])$ has the universal property.\\
-    Since we are working with left-linear system, $f_1$ is a monomorphism and $K_1 + L_2$ is the unique pushout complement that makes the diagram $[K_1, f_1, \imath_{K_1}]$ a pushout diagram. (A similar argument applies to the right side of the diagram).
-    % https://q.uiver.app/#q=WzAsMTEsWzYsMCwiS18yIl0sWzUsMCwiTF8yIl0sWzIsMCwiS18xIl0sWzMsMCwiTF8xIl0sWzQsMSwiTF8xICsgTF8yIl0sWzYsMSwiTF8xICsgS18yIl0sWzIsMSwiS18xICsgTF8yIl0sWzAsMCwiUl8xIl0sWzAsMSwiUl8xICsgTF8yIl0sWzgsMCwiUl8yIl0sWzgsMSwiTF8xICsgUl8yIl0sWzAsMSwiZl8yIiwyXSxbMiwzLCJmXzEiXSxbMyw0LCJpXzEiXSxbMSw0LCJpXzIiLDJdLFswLDUsIlxcaW1hdGhfe0tfMn0iXSxbNSw0LCJbaV8yLGZfMl0iXSxbMiw2LCJcXGltYXRoX3tLXzF9IiwyXSxbNiw0LCJbZl8xLGlfMl0iLDJdLFsyLDcsImdfMSIsMl0sWzcsOF0sWzYsOCwiW2dfMSxcXHRleHR7aWR9X3tMXzJ9XSJdLFswLDksImdfMiJdLFs1LDEwLCJbXFx0ZXh0e2lkfV97TF8xfSxnXzJdIiwyXSxbOSwxMF1d
-\[\begin{tikzcd}
-	{R_1} && {K_1} & {L_1} && {L_2} & {K_2} && {R_2} \\
-	{R_1 + L_2} && {K_1 + L_2} && {L_1 + L_2} && {L_1 + K_2} && {L_1 + R_2}
+    Indeed, consider the following diagram:
+% https://q.uiver.app/#q=WzAsMTIsWzAsMCwiUl8xIl0sWzIsMCwiS18xIl0sWzMsMCwiTF8xIl0sWzUsMCwiTF8yIl0sWzYsMCwiS18yIl0sWzgsMCwiUl8yIl0sWzAsMSwiUl8xICsgTF8yIl0sWzIsMSwiS18xICsgTF8yIl0sWzQsMSwiTF8xICsgTF8yIl0sWzYsMSwiTF8xICsgS18yIl0sWzgsMSwiTF8xICsgUl8yIl0sWzQsMiwiSV8xK0lfMiJdLFswLDZdLFsxLDAsIntnXzF9IiwyXSxbMSwyLCJ7Zl8xfSJdLFsxLDcsIntcXGltYXRoX3tLXzF9fSIsMl0sWzIsOCwie2lfMX0iXSxbMyw4LCJ7aV8yfSIsMl0sWzQsMywie2ZfMn0iLDJdLFs0LDUsIntnXzJ9Il0sWzQsOSwie1xcaW1hdGhfe0tfMn19Il0sWzUsMTBdLFs3LDYsIntbZ18xLFxcdGV4dHtpZH1fe0xfMn1dfSJdLFs3LDgsIntbZl8xLGlfMl19IiwyXSxbOSw4LCJ7W2lfMixmXzJdfSJdLFs5LDEwLCJ7W1xcdGV4dHtpZH1fe0xfMX0sZ18yXX0iLDJdLFsxMSw3LCIiLDAseyJjdXJ2ZSI6LTF9XSxbMTEsOSwiIiwwLHsiY3VydmUiOjF9XSxbNiwxLCIoMikiLDEseyJzdHlsZSI6eyJib2R5Ijp7Im5hbWUiOiJub25lIn0sImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMTEsOCwiIiwxLHsic3R5bGUiOnsibmFtZSI6ImFkanVuY3Rpb24ifX1dLFs4LDEsIigxKSIsMSx7InN0eWxlIjp7ImJvZHkiOnsibmFtZSI6Im5vbmUifSwiaGVhZCI6eyJuYW1lIjoibm9uZSJ9fX1dXQ==
+\[\begin{tikzcd}[ampersand replacement=\&]
+	{R_1} \&\& {K_1} \& {L_1} \&\& {L_2} \& {K_2} \&\& {R_2} \\
+	{R_1 + L_2} \&\& {K_1 + L_2} \&\& {L_1 + L_2} \&\& {L_1 + K_2} \&\& {L_1 + R_2} \\
+	\&\&\&\& {I_1+I_2}
 	\arrow[from=1-1, to=2-1]
-	\arrow["{g_1}"', from=1-3, to=1-1]
-	\arrow["{f_1}", from=1-3, to=1-4]
-	\arrow["{\imath_{K_1}}"', from=1-3, to=2-3]
-	\arrow["{i_1}", from=1-4, to=2-5]
-	\arrow["{i_2}"', from=1-6, to=2-5]
-	\arrow["{f_2}"', from=1-7, to=1-6]
-	\arrow["{g_2}", from=1-7, to=1-9]
-	\arrow["{\imath_{K_2}}", from=1-7, to=2-7]
+	\arrow["{{g_1}}"', from=1-3, to=1-1]
+	\arrow["{{f_1}}", from=1-3, to=1-4]
+	\arrow["{{\imath_{K_1}}}"', from=1-3, to=2-3]
+	\arrow["{{i_1}}", from=1-4, to=2-5]
+	\arrow["{{i_2}}"', from=1-6, to=2-5]
+	\arrow["{{f_2}}"', from=1-7, to=1-6]
+	\arrow["{{g_2}}", from=1-7, to=1-9]
+	\arrow["{{\imath_{K_2}}}", from=1-7, to=2-7]
 	\arrow[from=1-9, to=2-9]
-	\arrow["{[g_1,\text{id}_{L_2}]}", from=2-3, to=2-1]
-	\arrow["{[f_1,i_2]}"', from=2-3, to=2-5]
-	\arrow["{[i_2,f_2]}", from=2-7, to=2-5]
-	\arrow["{[\text{id}_{L_1},g_2]}"', from=2-7, to=2-9]
+	\arrow["{(2)}"{description}, draw=none, from=2-1, to=1-3]
+	\arrow["{{[g_1,\text{id}_{L_2}]}}", from=2-3, to=2-1]
+	\arrow["{{[f_1,i_2]}}"', from=2-3, to=2-5]
+	\arrow["{(1)}"{description}, draw=none, from=2-5, to=1-3]
+	\arrow["{{[i_2,f_2]}}", from=2-7, to=2-5]
+	\arrow["{{[\text{id}_{L_1},g_2]}}"', from=2-7, to=2-9]
+	\arrow[curve={height=-6pt}, from=3-5, to=2-3]
+	\arrow["\dashv"{anchor=center, rotate=90}, draw=none, from=3-5, to=2-5]
+	\arrow[curve={height=6pt}, from=3-5, to=2-7]
 \end{tikzcd}\]
+Here $I_i \rightarrow L_i$ are an ma-hypergraph with interface.
 
+We need to show that squares (1), (2) are pushout squares, and T is a commutative diagram (and similarly on the right-hand side). After that, having obtained a pre-critical pair, we need to construct morphisms $L_2 \rightarrow K_1 + L_2$ and $L_1 \rightarrow L_1+K_2$ to have a parallel pair.
 
-Consider the inclusions $\imath_{L_1} : L_1 \to L_1 + K_2$ and $\imath_{L_2} : L_2 \to K_1 + L_2$; we have that $\imath_{L_1} ; [f_1, \id] = \imath_{L_2} ; [\id, f_2]$. We conclude that $L_1 + L_2$ is a parallel critical pair since the identity is an epimorphism.
+We start by showing that $(L_1 + L_2, i_1, [f_1,i_2])$ is the pushout of $K_1 + L_2 \xleftarrow{\imath_{K_1}} K_1 \xrightarrow{f_1} L_1$ (square (1)). It is clear that $i_1$ and $[f_1, i_2]$ make the diagram commute. Now we need to show that $(L_1 + L_2, i_1, [f_1,i_2])$ has the universal property.\\
+    Since we are working with a left-linear system, $f_1$ is a monomorphism and $K_1 + L_2$ is the unique pushout complement that makes the diagram $[K_1, f_1, \imath_{K_1}]$ a pushout diagram. (A similar argument applies to the right side of the diagram).
+
+Since $I_i \rightarrow L_i$ are an ma-hypergraph with interface, by construction $J = I_1+I_2 \rightarrow L_1+L_2 = S$ is a ma-hypergraph.
+
+Now for the parallelism, consider the inclusions $\imath_{L_1} : L_1 \to L_1 + K_2$ and $\imath_{L_2} : L_2 \to K_1 + L_2$; we have that $\imath_{L_1} ; [f_1, \id] = \imath_{L_2} ; [\id, f_2]$. We conclude that $L_1 + L_2$ is a parallel critical pair since the identity is an epimorphism.
 
 % https://q.uiver.app/#q=WzAsOCxbNCwwLCJLXzIiXSxbMywwLCJMXzIiXSxbMCwwLCJLXzEiXSxbMSwwLCJMXzEiXSxbMiwxLCJMXzEgKyBMXzIiXSxbNCwxLCJMXzEgKyBLXzIiXSxbMCwxLCJLXzEgKyBMXzIiXSxbMSwxXSxbMCwxLCJmXzIiLDJdLFsyLDMsImZfMSJdLFszLDQsInFfMSJdLFsxLDQsInFfMiIsMl0sWzAsNSwiXFxpbWF0aF97S18yfSJdLFs1LDQsIltcXHRleHR7aWR9X3tMXzF9LGZfMl0iXSxbMiw2LCJcXGltYXRoX3tLXzF9IiwyXSxbNiw0LCJbZl8xLFxcdGV4dHtpZH1fe0xfMn1dIiwyXSxbMyw1LCIiLDEseyJzdHlsZSI6eyJ0YWlsIjp7Im5hbWUiOiJob29rIiwic2lkZSI6InRvcCJ9fX1dLFsxLDYsIiIsMSx7InN0eWxlIjp7InRhaWwiOnsibmFtZSI6Imhvb2siLCJzaWRlIjoiYm90dG9tIn19fV1d
 \[\begin{tikzcd}
@@ -699,8 +843,51 @@ Consider the inclusions $\imath_{L_1} : L_1 \to L_1 + K_2$ and $\imath_{L_2} : L
 	\arrow["{[f_1,\text{id}_{L_2}]}"', from=2-1, to=2-3]
 	\arrow["{[\text{id}_{L_1},f_2]}", from=2-5, to=2-3]
 \end{tikzcd}\]
-
 \end{myproof}
+% \begin{myproof}
+%     Let $(L_1 + L_2, i_1, i_2)$ be the coproduct of $L_1$ and $L_2$.\\
+%     We start by showing that $(L_1 + L_2, i_1, [f_1,i_2])$ is the pushout of $K_1 + L_2 \xleftarrow{\imath_{K_1}} K_1 \xrightarrow{f_1} L_1$. It is clear that $q_1$ and $[f_1, i_2]$ make the diagram commute. Now we need to show that $(L_1 + L_2, i_1, [f_1,i_2])$ has the universal property.\\
+%     Since we are working with left-linear system, $f_1$ is a monomorphism and $K_1 + L_2$ is the unique pushout complement that makes the diagram $[K_1, f_1, \imath_{K_1}]$ a pushout diagram. (A similar argument applies to the right side of the diagram).
+%     % https://q.uiver.app/#q=WzAsMTEsWzYsMCwiS18yIl0sWzUsMCwiTF8yIl0sWzIsMCwiS18xIl0sWzMsMCwiTF8xIl0sWzQsMSwiTF8xICsgTF8yIl0sWzYsMSwiTF8xICsgS18yIl0sWzIsMSwiS18xICsgTF8yIl0sWzAsMCwiUl8xIl0sWzAsMSwiUl8xICsgTF8yIl0sWzgsMCwiUl8yIl0sWzgsMSwiTF8xICsgUl8yIl0sWzAsMSwiZl8yIiwyXSxbMiwzLCJmXzEiXSxbMyw0LCJpXzEiXSxbMSw0LCJpXzIiLDJdLFswLDUsIlxcaW1hdGhfe0tfMn0iXSxbNSw0LCJbaV8yLGZfMl0iXSxbMiw2LCJcXGltYXRoX3tLXzF9IiwyXSxbNiw0LCJbZl8xLGlfMl0iLDJdLFsyLDcsImdfMSIsMl0sWzcsOF0sWzYsOCwiW2dfMSxcXHRleHR7aWR9X3tMXzJ9XSJdLFswLDksImdfMiJdLFs1LDEwLCJbXFx0ZXh0e2lkfV97TF8xfSxnXzJdIiwyXSxbOSwxMF1d
+% \[\begin{tikzcd}
+% 	{R_1} && {K_1} & {L_1} && {L_2} & {K_2} && {R_2} \\
+% 	{R_1 + L_2} && {K_1 + L_2} && {L_1 + L_2} && {L_1 + K_2} && {L_1 + R_2}
+% 	\arrow[from=1-1, to=2-1]
+% 	\arrow["{g_1}"', from=1-3, to=1-1]
+% 	\arrow["{f_1}", from=1-3, to=1-4]
+% 	\arrow["{\imath_{K_1}}"', from=1-3, to=2-3]
+% 	\arrow["{i_1}", from=1-4, to=2-5]
+% 	\arrow["{i_2}"', from=1-6, to=2-5]
+% 	\arrow["{f_2}"', from=1-7, to=1-6]
+% 	\arrow["{g_2}", from=1-7, to=1-9]
+% 	\arrow["{\imath_{K_2}}", from=1-7, to=2-7]
+% 	\arrow[from=1-9, to=2-9]
+% 	\arrow["{[g_1,\text{id}_{L_2}]}", from=2-3, to=2-1]
+% 	\arrow["{[f_1,i_2]}"', from=2-3, to=2-5]
+% 	\arrow["{[i_2,f_2]}", from=2-7, to=2-5]
+% 	\arrow["{[\text{id}_{L_1},g_2]}"', from=2-7, to=2-9]
+% \end{tikzcd}\]
+
+
+% Consider the inclusions $\imath_{L_1} : L_1 \to L_1 + K_2$ and $\imath_{L_2} : L_2 \to K_1 + L_2$; we have that $\imath_{L_1} ; [f_1, \id] = \imath_{L_2} ; [\id, f_2]$. We conclude that $L_1 + L_2$ is a parallel critical pair since the identity is an epimorphism.
+
+% % https://q.uiver.app/#q=WzAsOCxbNCwwLCJLXzIiXSxbMywwLCJMXzIiXSxbMCwwLCJLXzEiXSxbMSwwLCJMXzEiXSxbMiwxLCJMXzEgKyBMXzIiXSxbNCwxLCJMXzEgKyBLXzIiXSxbMCwxLCJLXzEgKyBMXzIiXSxbMSwxXSxbMCwxLCJmXzIiLDJdLFsyLDMsImZfMSJdLFszLDQsInFfMSJdLFsxLDQsInFfMiIsMl0sWzAsNSwiXFxpbWF0aF97S18yfSJdLFs1LDQsIltcXHRleHR7aWR9X3tMXzF9LGZfMl0iXSxbMiw2LCJcXGltYXRoX3tLXzF9IiwyXSxbNiw0LCJbZl8xLFxcdGV4dHtpZH1fe0xfMn1dIiwyXSxbMyw1LCIiLDEseyJzdHlsZSI6eyJ0YWlsIjp7Im5hbWUiOiJob29rIiwic2lkZSI6InRvcCJ9fX1dLFsxLDYsIiIsMSx7InN0eWxlIjp7InRhaWwiOnsibmFtZSI6Imhvb2siLCJzaWRlIjoiYm90dG9tIn19fV1d
+% \[\begin{tikzcd}
+% 	{K_1} & {L_1} && {L_2} & {K_2} \\
+% 	{K_1 + L_2} & {} & {L_1 + L_2} && {L_1 + K_2}
+% 	\arrow["{f_1}", from=1-1, to=1-2]
+% 	\arrow["{\imath_{K_1}}"', from=1-1, to=2-1]
+% 	\arrow["{q_1}", from=1-2, to=2-3]
+% 	\arrow[hook, from=1-2, to=2-5]
+% 	\arrow[hook', from=1-4, to=2-1]
+% 	\arrow["{q_2}"', from=1-4, to=2-3]
+% 	\arrow["{f_2}"', from=1-5, to=1-4]
+% 	\arrow["{\imath_{K_2}}", from=1-5, to=2-5]
+% 	\arrow["{[f_1,\text{id}_{L_2}]}"', from=2-1, to=2-3]
+% 	\arrow["{[\text{id}_{L_1},f_2]}", from=2-5, to=2-3]
+% \end{tikzcd}\]
+
+% \end{myproof}
 
 
 \begin{myproposition}
@@ -819,8 +1006,8 @@ The morphisms $C_i \rightarrow S$ are monomorphisms as a pushout of a monomorphi
 
 \end{myproof}
 
-\bibliographystyle{abbrv}
-\bibliography{ref}
+% \bibliographystyle{abbrv}
+\printbibliography
 
 \end{document}
 
