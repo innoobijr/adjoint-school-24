@@ -207,32 +207,291 @@ Our goal is to study critical pairs for PROP rewriting without Frobenius structu
 We introduce several definitions regarding these rewriting systems.
 
 \begin{mydefinition}%[Alternative definition]
-    Let $\Sigma$ be a signature, \ie, a set of function symbols. A (directed) hypergraph $G$ is a tuple $(V_G, E_G, s_G, t_G, l_E)$ where $V_G$ and $E_G$ are finite sets of nodes (vertices) and hyperedges, $s_G, t_G: E_G \rightarrow V_G^{*}$ are mappings that assign a string of source and target nodes to each edge and $l_E : E_G \to \Sigma$ is an edge labelling function. \\
+    A (directed) \textbf{hypergraph} $G$ is a tuple $(V_G, E_G, s_G, t_G, l_E)$ where $V_G$ and $E_G$ are finite sets of nodes (vertices) and hyperedges, $s_G, t_G: E_G \rightarrow V_G^{*}$ are mappings that assign a string of source and target nodes to each edge.
 
-    We let $\Hyp_{\Sigma}$ be the category of hypergraphs with fixed labels and hypergraph homomorphisms.
+    Let $\sigma$ be an alphabet, a \textbf{signature} $\Sigma$ on $\sigma$ is a subset of $\sigma \times \mathbb{N} \times \mathbb{N}$. A triplet $(x,n,m)$ represents a morphism $x$ with arity $n$ and coarity $m$.
+    
+    
+    A $\Sigma$\textbf{-labelled hypergraph} or $\Sigma$-hypergraph is a hypergraph $H$ equipped with a labelling function  $l_E : E_G \to \Sigma$ such that $l_E$ maps an hyperedge with $n$ sources and $m$ targets to a triplet $(x,n,m)$.
+
+    We let $\Hyp_{\Sigma}$ be the category of $\Sigma$-hypergraphs hypergraph homomorphisms.
 \end{mydefinition}
 
+\begin{myexample}
+We depict below an arbitrary hypergraph $H_1$ on the signature $\Sigma := \{(a,1,2),(b,2,1)\}$:
+\[
+\begin{tikzpicture}[mg]
+    % nodes
+    \node (1) at (0, 0) {1};
+    \node (2) at (2, 1) {2};
+    \node (3) at (2, -1) {3};
+    \node (4) at (4,0) {4};
+
+    % hyperedge a
+    \node[draw, rectangle] (a) at (1, 0) {a};
+    \draw[-] (1) to (a);
+    \draw[->] (a) to (2); 
+    \draw[->] (a) to (3);  
+
+    % hyperedge b
+    \node[draw, rectangle] (b) at (3, 0) {b};
+    \draw[-] (2) to (b);
+    \draw[-] (3) to (b);
+    \draw[->] (b) to (4);
+
+\end{tikzpicture}
+\]
+
+Note that the order of the sources and targets matters, the following hypergraph $H_2$ is different from the one above~:
+
+\[
+\begin{tikzpicture}[mg]
+    % nodes
+    \node (1) at (0, 0) {1};
+    \node (2) at (2, 1) {2};
+    \node (3) at (2, -1) {3};
+    \node (4) at (4,0) {4};
+
+    % hyperedge a
+    \node[draw, rectangle] (a) at (1, 0) {a};
+    \draw[-] (1) to (a);  
+    \draw[->] (a) to (2); 
+    \draw[->] (a) to (3);  
+
+    % hyperedge b
+    \node[draw, rectangle] (b) at (3, 0) {b};
+    \node[draw=none] (b1) at (2.88, -0.3) {};
+    \node[draw=none] (b2) at (2.88, 0.3) {};
+    \draw[-] (2) to (b1);
+    \draw[-] (3) to (b2);
+    \draw[->] (b) to (4);
+\end{tikzpicture}
+\]
+
+However, the name of the nodes is not important because we consider $\Sigma$-hypergraphs only up to isomorphism. Two $\Sigma$-hypergraphs are considered the same if they are isomorphic.
+
+Note that $H_1$ and $H_2$ are not isomorphic.
+\end{myexample}
+
+
 \begin{mydefinition}
-    A hypergraph with interface is a cospan $\catcospan n G m$ in $\Hyp_{\Sigma}$ where $n$, $m$ are discrete hypergraphs. 
+    A \textbf{path} $P$ in a hypergraph is a list of hyperedges $[e_1,e_2,\cdots,e_n]$ such that for every consecutive pair of hyperedges $(e_k,e_{k+1})$, there is at least one target of $e_k$ equal to a source of $e_{k+1}$.
+
+    A \textbf{cycle} $C$ in a hypergraph is a path such that at least one source of $e_1$ is a target of $e_n$.
 \end{mydefinition}
-Let $Csp_D(\textbf{Hyp}_{\Sigma})$ be the category of hypergraphs with interfaces.
+
+\begin{myexample}
+
+We consider the following $\Sigma$-hypergraph with $\Sigma := \{(a,1,2),(b,2,1),(c,1,1)\}$:
+
+\[
+\begin{tikzpicture}[mg]
+    % nodes
+    \node (1) at (0, 0) {1};
+    \node (2) at (0, -2) {2};
+    \node (3) at (2, 1) {3};
+    \node (4) at (2, -1) {4};
+    \node (5) at (2, -3) {5};
+    \node (6) at (4, 0) {6};
+    \node (7) at (4, -2) {7};
+    \node (8) at (6, -1) {8};
+
+    %hyperedges labels
+    \node[draw, rectangle] (a1) at (1, 0) {a};
+    \node[draw, rectangle] (a2) at (1, -2) {a};
+    \node[draw, rectangle] (b1) at (3, 0) {b};
+    \node[draw, rectangle] (b2) at (3, -2) {b};
+    \node[draw, rectangle] (b3) at (5, -1) {b};
+    \node[draw, rectangle] (c) at (3, -5) {c};
+    
+    % hyperedges 
+    \draw[-] (1) to (a1);   
+    \draw[->] (a1) to (3);
+    \draw[->] (a1) to (4);  
+
+    \draw[-] (2) to (a2);
+    \draw[->] (a2) to (4);
+    \draw[->] (a2) to (5);
+    
+    \draw[-] (3) to (b1);
+    \draw[-] (4) to (b1);
+    \draw[->] (b1) to (6);
+    
+    \draw[-] (4) to (b2);
+    \draw[-] (5) to (b2);
+    \draw[->] (b2) to (7);
+
+    \draw[-] (6) to (b3);
+    \draw[-] (7) to (b3);
+    \draw[->] (b3) to (8);
+
+    \draw[-] (8) to (c);
+    \draw[->] (c) to (2);
+\end{tikzpicture}
+\]
+
+We will write a hyperedge $(label,sources,targets)$.
+
+Here, $[(a,[1],[3,4]),(b,[3,4],[6]),(b,[6,7],[8])]$ is a path.
+
+$[(a,[2],[4,5]),(b,[4,5],[7]),(b,[6,7],[8]),(c,[8],[2])]$ is a cycle.
+
+\end{myexample}
+
+
+\begin{mydefinition}
+    A $\Sigma$\textbf{-hypergraph with interface} is a cospan $\catcospan n G m$ in $\Hyp_{\Sigma}$ where $n$, $m$ are discrete $\Sigma$-hypergraphs. 
+\end{mydefinition}
+
+Let $Csp_D(\textbf{Hyp}_{\Sigma})$ be the category of $\Sigma$-hypergraphs with interfaces.
+
+\begin{myexample}
+
+Consider the following $\Sigma$-hypergraph $H$~:
+
+\[
+\begin{tikzpicture}[mg]
+    % nodes
+    \node (1) at (0, 0) {1};
+    \node (2) at (2, 1) {2};
+    \node (3) at (2, -1) {3};
+    \node (4) at (4,0) {4};
+
+    % hyperedge a
+    \node[draw, rectangle] (a) at (1, 0) {a};
+    \draw[-] (1) to (a);
+    \draw[->] (a) to (2); 
+    \draw[->] (a) to (3);  
+
+    % hyperedge b
+    \node[draw, rectangle] (b) at (3, 0) {b};
+    \draw[-] (2) to (b);
+    \draw[-] (3) to (b);
+    \draw[->] (b) to (4);
+
+\end{tikzpicture}
+\]
+
+We may choose $1$ to be the left interface, $3$ and $4$ to be the right interface. This would be a $1 \to G \longleftarrow 2$ cospan.
+\end{myexample}
+
+
 \begin{mydefinition}
 
-\textbf{Monogamous acyclic hypergraphs}
-A hypergraph G is called monogamous acyclic (ma-hypergraph) if
+A $\Sigma$-hypergraph $G$ is \textbf{monogamous acyclic} (ma-hypergraph) if
 \begin{enumerate}
     \item it contains no cycles (acyclicity)
     \item every node has at most in- and out- degree 1 (monogamy)
 \end{enumerate}
-Here in- (out-) degree of a node v in an hypergraph G is the number of pairs (h, i) where h is an hyperedge with v as its i-th target (source). We call input nodes those with in-degree 0, denoted by in(G). Similarly, output nodes have out-degree 0 and are denoted by out(G).
+Here in- (out-) degree of a node v in a $\Sigma$-hypergraph G is the number of pairs (h, i) where h is an hyperedge with v as its i-th target (source). We call input nodes those with in-degree 0, denoted by in(G). Similarly, output nodes have out-degree 0 and are denoted by out(G).
 
 A cospan $n \xrightarrow{f} G \xleftarrow{g} m$ in $Csp_D(\textbf{Hyp}_{\Sigma})$ is monogamous acyclic (ma-cospan) when G is an ma-hypergraph, f is mono and its image is in(G), and g is mono and its image is out(G).
 \end{mydefinition}
 
+\begin{myexample}
+
+The following $\Sigma$-hypergraph is monogamous acyclic.
+\[
+\begin{tikzpicture}[mg]
+    % nodes
+    \node (1) at (0, 0) {1};
+    \node (2) at (2, 1) {2};
+    \node (3) at (2, -1) {3};
+    \node (4) at (4,0) {4};
+
+    % hyperedge a
+    \node[draw, rectangle] (a) at (1, 0) {a};
+    \draw[-] (1) to (a);
+    \draw[->] (a) to (2); 
+    \draw[->] (a) to (3);  
+
+    % hyperedge b
+    \node[draw, rectangle] (b) at (3, 0) {b};
+    \draw[-] (2) to (b);
+    \draw[-] (3) to (b);
+    \draw[->] (b) to (4);
+
+\end{tikzpicture}
+\]
+
+The following one is not because it is not monogamous:
+
+\[
+\begin{tikzpicture}[mg]
+    % nodes
+    \node (1) at (0, 0) {1};
+    \node (2) at (2, 0) {2};
+    \node (4) at (4,0) {4};
+
+    % hyperedge a
+    \node[draw, rectangle] (a) at (1, 0) {a};
+    \draw[-] (1) to (a);
+    \draw[->] (a) to [bend left] (2); 
+    \draw[->] (a) to [bend right] (2);  
+
+    % hyperedge b
+    \node[draw, rectangle] (b) at (3, 0) {b};
+    \draw[-] (2) to [bend left] (b);
+    \draw[-] (2) to [bend right] (b);
+    \draw[->] (b) to (4);
+
+\end{tikzpicture}
+\]
+
+The following $\Sigma$-hypergraph is monogamous but not acyclic:
+
+\[
+\begin{tikzpicture}[mg]
+    % nodes
+    \node (1) at (0, 0) {1};
+    \node (2) at (0, -2) {2};
+    \node (3) at (2, 1) {3};
+    \node (4) at (2, -1) {4};
+    \node (5) at (2, -3) {5};
+    \node (6) at (4, 0) {6};
+    \node (7) at (4, -2) {7};
+    \node (8) at (6, -1) {8};
+
+    %hyperedges labels
+    \node[draw, rectangle] (a1) at (1, 0) {a};
+    \node[draw, rectangle] (a2) at (1, -2) {a};
+    \node[draw, rectangle] (b1) at (3, 0) {b};
+    \node[draw, rectangle] (b2) at (3, -2) {b};
+    \node[draw, rectangle] (b3) at (5, -1) {b};
+    \node[draw, rectangle] (c) at (3, -5) {c};
+    
+    % hyperedges 
+    \draw[-] (1) to (a1);   
+    \draw[->] (a1) to (3);
+    \draw[->] (a1) to (4);  
+
+    \draw[-] (2) to (a2);
+    \draw[->] (a2) to (4);
+    \draw[->] (a2) to (5);
+    
+    \draw[-] (3) to (b1);
+    \draw[-] (4) to (b1);
+    \draw[->] (b1) to (6);
+    
+    \draw[-] (4) to (b2);
+    \draw[-] (5) to (b2);
+    \draw[->] (b2) to (7);
+
+    \draw[-] (6) to (b3);
+    \draw[-] (7) to (b3);
+    \draw[->] (b3) to (8);
+
+    \draw[-] (8) to (c);
+    \draw[->] (c) to (2);
+\end{tikzpicture}
+\]
+    
+\end{myexample}
+
 \begin{mydefinition}
 
 \textbf{MA-hypergraphs with interface} 
-A hypergraph with interface $G \leftarrow J$ is monogamous acyclic (ma-hypergraph with interface) if it is of the form $G \xleftarrow{[i, o]} n+m$ for an ma-cospan $n \xrightarrow{i} G \xleftarrow{o} m$, up to isomorphism between J and n+m.
+A $\Sigma$-hypergraph with interface $G \leftarrow J$ is monogamous acyclic (ma-hypergraph with interface) if it is of the form $G \xleftarrow{[i, o]} n+m$ for an ma-cospan $n \xrightarrow{i} G \xleftarrow{o} m$, up to isomorphism between $J$ and $n+m$.
 
 \end{mydefinition}
 
@@ -256,13 +515,13 @@ For ma-cospans $i \xrightarrow{a_1} L \xleftarrow{a_2} j$ and $n \xrightarrow{b_
 is called a boundary complement if $[c_1, c_2]$ is mono and there exists $d_1 : n \rightarrow L^{\bot}$ and $d_2 : m \rightarrow L^{\bot}$ making the above triangle commute and such that \[j+n \xrightarrow{[c_2, d_1]} L \xleftarrow{[c_1, d_2]} m+i\] is an ma-cospan.
 
 \end{mydefinition}
-Note that boundary complements are unique when they exist.
+Note that boundary complements are unique when they exist whereas pushout complements might not be unique when dealing with ma-hypergraphs with interface.
 
 The next definition is a restriction of possible matches.
 \begin{mydefinition}
 
 \textbf{Convex match} 
-$m: L \rightarrow G$ in $\textbf{Hyp}_{\Sigma}$ is a convex match if it is mono and its image m(L) is convex, i.e. for any nodes v, v' in m(L) and any path p form v to v' in G, every hyperedge in p is also in m(L).
+$m: L \rightarrow G$ in $\textbf{Hyp}_{\Sigma}$ is a convex match if it is mono and its image $m(L)$ is convex, i.e. for any nodes $v, v'$ in $m(L)$ and any path $p$ from $v$ to $v' in G$, every hyperedge in $p$ is also in $m(L)$.
 
 \end{mydefinition}
 
@@ -893,8 +1152,8 @@ Now for the parallelism, consider the inclusions $\imath_{L_1} : L_1 \to L_1 + K
 \begin{myproposition}
     \noindent
     \begin{description}
-        \item[Correctness] \label{item:correctness} Each result $L_i + L_j \overset{\epsilon_{ij\gamma}}{\twoheadrightarrow} S_{ij\gamma} \xleftarrow{\pi_1;c_{ij\gamma}^L} J_{ij\gamma}$ of Algo.~\ref{algo2} is a pre-critical pair.
-        \item[Exhaustiveness] \label{item:exhaustiveness} Any pre-critical pair $L_i + L_j \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$ can be yielded by Algo.~\ref{algo2}.
+        \item[Correctness] \label{item:correctness} Each result $L_i + L_j \overset{\epsilon_{ij\gamma}}{\twoheadrightarrow} S_{ij\gamma} \xleftarrow{\pi_1;c_{ij\gamma}^L} J_{ij\gamma}$ of Algo.~\ref{algo2} is an ma-pre-critical pair.
+        \item[Exhaustiveness] \label{item:exhaustiveness} Any ma-pre-critical pair $L_i + L_j \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$ can be yielded by Algo.~\ref{algo2}.
     \end{description}
 \end{myproposition}
 \begin{myproof}[Proof of correctness]
@@ -904,17 +1163,17 @@ Now for the parallelism, consider the inclusions $\imath_{L_1} : L_1 \to L_1 + K
    
 \end{myproof}
 \begin{myproof}[Proof of exhaustiveness]
-Let $L_i + L_j \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$ be a precritical-pair with interface.
+Let $L_i + L_j \overset{\epsilon}{\twoheadrightarrow} X \overset{F}{\leftarrow} J$ be an ma-pre-critical pair with interface.
 
 An epimorphism of hypergraphs is surjective on nodes and on hyperedges because the category of hypergraphs is a presheaf category.
 
 Thus, each node and each hyperedge has a non-empty preimage set by $\epsilon$. We can see each of these preimages sets as equivalence classes glued by a coequalizer process, as will be explained by what follows.
 
-The inclusions $\iota_i;\epsilon$ and $\iota_j;\epsilon$ should be monomorphisms for the complements $C_i$ and $C_j$ to exist.
+The inclusions $\iota_i;\epsilon$ and $\iota_j;\epsilon$ should be monomorphisms for the boundary complements $C_i$ and $C_j$ to exist.
 
 
-problem : there are not necessarily monomorphisms. There are only injective on hyperedges.
-for example, you could have L1 = 1 -f-> 2 3 -g-> 4 and in X have 1 -f-> 2 -g-> 4.
+%problem : there are not necessarily monomorphisms. There are only injective on hyperedges.
+%for example, you could have L1 = 1 -f-> 2 3 -g-> 4 and in X have 1 -f-> 2 -g-> 4.
 % We must only consider ma-cospans (ma hypergraphs with interface) for it to be true (Definition 31 Bonchi III, follow section 5 of Bonchi III)
 
 % https://q.uiver.app/#q=WzAsOSxbMSwwLCJMX2kiXSxbMywwLCJMX2oiXSxbMiwxLCJMX2krTF9qIl0sWzIsMiwiWCJdLFsyLDMsIkoiXSxbMCwyLCJDX2kiXSxbNCwyLCJDX2oiXSxbMCwwLCJLX2kiXSxbNCwwLCJLX2oiXSxbMCwyLCJcXGlvdGFfaSJdLFsxLDIsIlxcaW90YV9qIiwyXSxbMiwzLCJcXGVwc2lsb24iLDEseyJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJlcGkifX19XSxbMCwzLCJcXGlvdGFfaTtcXGVwc2lsb24iLDJdLFsxLDMsIlxcaW90YV9qO1xcZXBzaWxvbiJdLFs0LDVdLFs0LDZdLFs1LDNdLFs2LDNdLFs3LDBdLFs4LDFdLFs3LDVdLFs4LDZdLFszLDcsIiIsMCx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dLFszLDgsIiIsMCx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dLFs0LDMsIiIsMCx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dXQ==
@@ -941,18 +1200,39 @@ for example, you could have L1 = 1 -f-> 2 3 -g-> 4 and in X have 1 -f-> 2 -g-> 4
 	\arrow[from=4-3, to=3-5]
 \end{tikzcd}\]
 
-Therefore, two nodes in a preimage equivalence class cannot come from the same hypergraph and two hyperedges in a preimage equivalence class cannot come from the same hypergraph. The preimage equivalence classes can therefore have at most two elements each.
+Therefore, two nodes in a preimage equivalence class cannot come from the same hypergraph.
 
-We construct the hypergraph $\gamma$ with the preimage equivalence classes of nodes as nodes and the preimage equivalence classes of hyperedges as hyperedges. We consider two hypergraph homomorphisms $F_1 : \gamma \to L_1 + L_2$ and $F_2 : \gamma \to L_1 + L_2$ such that $F_1$ maps an equivalence class node (hyperedge) to the node (hyperedge) coming from $L_1$ if possible and $F_2$ maps an equivalence class node (hyperedge) to the node (hyperedge) coming from $L_2$ if possible.
+\[ (\forall V \in Vertices(X)) \qquad card(\{V_i \in Vertices(L_i)\quad | \quad \iota_i(\epsilon(V_i)) = V\}) \leq 1 \]
+
+Similarly, two hyperedges in a preimage equivalence class cannot come from the same hypergraph.
+
+The preimage equivalence classes can therefore have at most two elements each.
+
+\[ (\forall V \in Vertices(X)) \qquad card(\{V' \in Vertices(L_i+L_j)\quad | \quad \epsilon(V') = V\}) \leq 2 \]
+
+We construct the hypergraph $\gamma$ with the preimage equivalence classes of nodes containing two elements as nodes and the preimage equivalence classes of hyperedges containing two elements as hyperedges.
+
+\begin{gather*}
+Vertices(\gamma) := \{\{V' \in Vertices(L_i+L_j)\quad | \quad \epsilon(V') = V\} \quad | \quad V \in Vertices(X), \\card(\{V' \in Vertices(L_i+L_j)\quad | \quad \epsilon(V') = V\}) = 2\}
+\end{gather*}
+
+\begin{gather*}
+Hyperedges(\gamma) := \{\{E' \in Hyperedges(L_i+L_j)\quad | \quad \epsilon(E') = E\} \quad | \quad E \in Hyperedges(X), \\card(\{E' \in Hyperedges(L_i+L_j)\quad | \quad \epsilon(E') = E\}) = 2\}
+\end{gather*}
+
+%Note that no set $\{V' \in Vertices(L_i+L_j)\quad | \quad \epsilon(V') = V\}$ is empty because $\epsilon$ is epi. Similarly, no set $\{E' \in Hyperedges(L_i+L_j)\quad | \quad \epsilon(E') = E\}$ is empty.
+
+We consider two hypergraph homomorphisms $F_i : \gamma \to L_i + L_j$ and $F_j : \gamma \to L_i + L_j$ such that $F_i$ maps an equivalence class node (hyperedge) to a node (hyperedge) of the equivalence class coming from $L_i$ and $F_j$ maps an equivalence class node (hyperedge) to a node (hyperedge) of the equivalence class coming from $L_j$. Note that this is always possible because $\gamma$ has nodes (hyperedges) containing exactly one node (hyperedge) coming from $L_i$ and one node (hyperedge) coming from $L_j$.
+
 
 $X$ is the coequalizer of the diagram % https://q.uiver.app/#q=WzAsMyxbMiwwLCJMXzErTF8yIl0sWzQsMF0sWzAsMCwiXFxnYW1tYSJdLFsyLDAsIkZfMSIsMCx7ImN1cnZlIjotMn1dLFsyLDAsIkZfMiIsMix7ImN1cnZlIjoyfV1d
 \begin{tikzcd}[ampersand replacement=\&,cramped]
-	\gamma \&\& {L_1+L_2} \&\& {}
-	\arrow["{F_1}", curve={height=-12pt}, from=1-1, to=1-3]
-	\arrow["{F_2}"', curve={height=12pt}, from=1-1, to=1-3]
-\end{tikzcd}.
+	\gamma \&\& {L_i+L_j} \&\& {}
+	\arrow["{F_i}", curve={height=-12pt}, from=1-1, to=1-3]
+	\arrow["{F_j}"', curve={height=12pt}, from=1-1, to=1-3]
+\end{tikzcd} by computation of colimits in $\mathbf{Set}$.
 
-$\gamma$ contains pairs of nodes (hyperedges) coming from $L_1$ and $L_2$, therefore it must belong to $\mathcal{G}$ as defined in the algorithm and $\epsilon : L_1 + L_2 \to X$ must have been constructed by the algorithm. $F : J \to X$ follows from $\epsilon$.
+$\gamma$ contains pairs of nodes (hyperedges) coming from $L_i$ and $L_j$, therefore it must belong to $\mathcal{G}$ as defined in the algorithm and $\epsilon : L_i + L_j \to X$ must have been constructed by the algorithm. $F : J \to X$ follows from $\epsilon$.
 
 \end{myproof}
 
